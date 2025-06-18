@@ -1,6 +1,6 @@
 # install dlib
 
-pip uninstall face_recognition
+pip uninstall dlib face_recognition
 
 
 git clone https://github.com/davisking/dlib.git
