@@ -10,7 +10,7 @@ function Homepage() {
   const handleStartWebcam = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:1880/api/webcam");
+      const res = await axios.get("http://localhost:3001/api/webcam");
       alert(res.data.message || "Webcam started");
     } catch (error) {
       console.error("Webcam error:", error);

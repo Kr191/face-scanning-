@@ -22,18 +22,22 @@ function RegisterForm() {
       last_name: lastName,
       image_name: "",
       created_at: "",
-      updated_at: ""
+      updated_at: "",
     };
 
     formData.append("user_json", JSON.stringify(userData));
     formData.append("file", image);
 
     try {
-      const res = await axios.post("http://localhost:1880/api/adduser", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await axios.post(
+        "http://localhost:3001/api/adduser",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       alert("Register success!");
       console.log(res.data);
     } catch (error) {
@@ -44,7 +48,12 @@ function RegisterForm() {
 
   return (
     <div className="container min-vh-100 d-flex justify-content-center align-items-center bg-light">
-      <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow" encType="multipart/form-data" style={{ width: '400px' }}>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-4 rounded shadow"
+        encType="multipart/form-data"
+        style={{ width: "400px" }}
+      >
         <h2 className="text-center mb-4">Register</h2>
 
         <div className="mb-3">
@@ -82,11 +91,19 @@ function RegisterForm() {
 
         {preview && (
           <div className="text-center mb-3">
-            <img src={preview} alt="Preview" className="rounded-circle" width={100} height={100} />
+            <img
+              src={preview}
+              alt="Preview"
+              className="rounded-circle"
+              width={100}
+              height={100}
+            />
           </div>
         )}
 
-        <button type="submit" className="btn btn-primary w-100">Register</button>
+        <button type="submit" className="btn btn-primary w-100">
+          Register
+        </button>
       </form>
     </div>
   );
