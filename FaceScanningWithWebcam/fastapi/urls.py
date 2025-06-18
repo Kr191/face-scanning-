@@ -1,0 +1,228 @@
+import json
+import threading
+import webcam
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from pymongo import MongoClient
+from pydantic import BaseModel
+from bson.objectid import ObjectId
+from datetime import datetime
+import uuid
+import EncodeGereator
+from fastapi.middleware.cors import CORSMiddleware
+import pickle
+
+api = FastAPI()
+
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+mongoclient = MongoClient("mongodb://localhost:27017/")
+db = mongoclient["user_database"]
+collection = db["users"]
+collection_login = db["logged_in_time"]
+
+from supabase import create_client, Client
+url: str = "https://qyrqyyqbsqmexauttmpd.supabase.co"
+key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5cnF5eXFic3FtZXhhdXR0bXBkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTUyNDI4OCwiZXhwIjoyMDY1MTAwMjg4fQ.NxXaFLI1zEVoMl6J0eI3zLCUXr8WyLGQdglrW5KrmpE"
+supabase: Client = create_client(url, key)
+
+class User(BaseModel):
+    first_name: str
+    last_name: str
+    image_name: str
+    created_at: str
+    updated_at: str
+
+class UpdateUser(BaseModel):
+    first_name: str
+    last_name: str
+
+
+@api.get("/")
+async def root():
+    # thread = threading.Thread(target=webcam.main)
+    # thread.start()
+    return {"message": "successfully"}
+
+
+@api.get("/api/webcam")
+async def web_cam():
+    thread = threading.Thread(target=webcam.main)
+    thread.start()
+    return {"message": "Webcam starto"}
+
+@api.post("/api/adduser")
+async def add_user(user_json: str = Form(...),
+                    file: UploadFile = File(...)): 
+    print("Raw user_json:", user_json)
+    try:
+        user_data = json.loads(user_json)
+        print("Parsed user_data:", user_data)
+        user = User(**user_data)
+    except Exception as e:
+        print("Error while parsing JSON or creating User:", str(e))
+        raise HTTPException(status_code=400, detail=f"Invalid user JSON: {str(e)}")
+    
+    user_dict = user.dict()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    user_dict["created_at"] = timestamp
+   
+    # add user's image to supabase storage
+    file.filename = f"{uuid.uuid4()}.jpg"
+    user_dict["image_name"] = file.filename # add user's image name to mongoDB
+    img = await file.read()   
+    EncodeGereator.encode_generator(img, file.filename)
+
+    response = ( supabase.storage
+        .from_("facescanningwithwebcam")
+        .upload(
+            file=img,
+            path= f"images/{file.filename}",
+            file_options={"cache-control": "3600", "upsert": "false"}
+        ))
+    
+    if hasattr(response, 'get') and response.get('error'):
+        raise HTTPException(status_code=500, detail=f"Upload failed: {response['error']['message']}")
+    
+    # add data to mongoDB
+    adding = collection.insert_one(user_dict)
+    
+    return [
+        {"message": "user added"},
+        {
+            "user_id": str(adding.inserted_id),
+            "first_name": user_dict["first_name"],
+            "last_name": user_dict["last_name"],
+            "image_name": user_dict["image_name"],
+            "created_at": user_dict["created_at"],
+            "url": f"https://qyrqyyqbsqmexauttmpd.supabase.co/storage/v1/object/public/facescanningwithwebcam/images/{file.filename}"
+        }
+    ]
+
+@api.get("/api/getusers")
+async def get_users():
+    all_users = []
+    users = list(collection.find({}))
+    if users == []:
+        raise HTTPException(status_code=404, detail="No users found")
+    else:
+        for user in users:
+            user["_id"] = str(user["_id"])
+            all_users.append(user)
+        return all_users
+    
+@api.get("/api/getuser/{user_id}")
+async def get_user(user_id: str):
+    try:
+        object_id = ObjectId(user_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+     
+    user = collection.find_one({"_id": object_id})
+    if user:
+        return {
+            "_id": str(user["_id"]),
+            "first_name": user["first_name"],
+            "last_name": user["last_name"],
+            "image_name": user["image_name"],
+            "created_at": user["created_at"],
+            "updated_at": user["updated_at"]
+             }
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+
+@api.get('/api/getalluserloggedin')
+async def get_all_loggedin():
+        all_user_loggedin = []
+        all_logged_in = list(collection_login.find({}))
+        if all_logged_in == []:
+            raise HTTPException(status_code=404, detail="No users found")
+        else:
+            for logged_in in all_logged_in:
+                logged_in["_id"] = str(logged_in["_id"])
+                logged_in["user_id"] = str(logged_in["user_id"])
+                all_user_loggedin.append(logged_in)
+            return all_user_loggedin
+            
+@api.get('/api/getloggedin/{user_id}')
+async def find_user_loggedin_from_id(user_id: str):
+        try:
+            object_id = ObjectId(user_id)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+
+        all_time_login = []
+        user_login = collection_login.find({"user_id": object_id})
+
+        if user_login == []:
+            raise HTTPException(status_code=404, detail="No users found")
+        else:
+            for logged_in in user_login:
+                logged_in["_id"] = str(logged_in["_id"])
+                logged_in["user_id"] = str(logged_in["user_id"])
+                all_time_login.append(logged_in)
+            return all_time_login
+
+@api.put('/api/updateuser/{user_id}')
+async def update_user(user_id: str, update_user: UpdateUser):
+        try:
+            object_id = ObjectId(user_id)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+
+        update_data = {}
+
+        if update_user.first_name:  
+            update_data["first_name"] = update_user.first_name
+        if update_user.last_name:
+            update_data["last_name"] = update_user.last_name
+
+        log_in_result = collection_login.update_many({"user_id": object_id}, {"$set": update_data})
+
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No data to update")
+        
+        update_data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        result = collection.update_one({"_id": object_id}, {"$set": update_data})
+        
+
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"message": "User Updated Successfully"}
+
+@api.delete('/api/deleteuser/{user_id}')
+async def delete_user(user_id: str):
+    try:
+        object_id = ObjectId(user_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+    
+    delete_user_image = collection.find_one({"_id": object_id})
+    
+    delete_img_name = delete_user_image["image_name"]
+    with open("EncodeFile.p", "rb") as file:
+        data_encode = pickle.load(file)
+    filtered_data = [delete_data for delete_data in data_encode if delete_data[0] != delete_img_name]
+
+    with open("EncodeFile.p", "wb") as save_file:
+        pickle.dump(filtered_data, save_file)
+
+    path = f"images/{delete_user_image['image_name']}"
+    response =  (
+        supabase.storage
+        .from_("facescanningwithwebcam")
+        .remove([path])
+        )
+
+    result = collection.delete_one({"_id": object_id})
+    if result.deleted_count == 1:
+        return {"message": "Delete user Successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="User not found")

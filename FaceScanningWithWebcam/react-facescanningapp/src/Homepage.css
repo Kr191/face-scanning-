@@ -1,0 +1,22 @@
+.homepage-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* vertical center */
+  align-items: center;     /* horizontal center */
+  padding: 2rem;          /* Added padding for spacing */
+  box-sizing: border-box;
+  width: 100%;            /* Ensure full width */
+  max-width: 600px;       /* Limit maximum width for better centering */
+  margin: 0 auto;         /* Center the container itself */
+}
+
+@media (max-width: 600px) {
+  .homepage-container {
+    padding: 1rem;
+  }
+  .homepage-container h1 {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+}
