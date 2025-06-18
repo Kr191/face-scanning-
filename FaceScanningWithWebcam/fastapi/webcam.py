@@ -10,12 +10,12 @@ import urllib.request
 import time
 
 from supabase import create_client, Client
-url: str = "https://qyrqyyqbsqmexauttmpd.supabase.co"
-key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5cnF5eXFic3FtZXhhdXR0bXBkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTUyNDI4OCwiZXhwIjoyMDY1MTAwMjg4fQ.NxXaFLI1zEVoMl6J0eI3zLCUXr8WyLGQdglrW5KrmpE"
+url: str = "YOUR_SUPABASE_URL"
+key: str = "YOUR_SUPABASE_API_KEY"
 supabase: Client = create_client(url, key)
 
  # MongoDB
-mongoclient = MongoClient("mongodb://localhost:27017/")
+mongoclient = MongoClient("YOUR_MONGODB")
 db = mongoclient["user_database"]
 collection = db["users"]
 collection_login = db["logged_in_time"]
