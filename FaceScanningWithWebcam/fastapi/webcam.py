@@ -107,8 +107,8 @@ def main():
                 }
             )
 
-            url = f"{url}/storage/v1/object/public/facescanningwithwebcam/images/{imgName[matchIndex]}"
-            response = urllib.request.urlopen(url)
+            img_url = f"{url}/storage/v1/object/public/facescanningwithwebcam/images/{imgName[matchIndex]}"
+            response = urllib.request.urlopen(img_url)
             userImg = np.asarray(bytearray(response.read()), dtype=np.uint8)
             userImg = cv2.imdecode(userImg, cv2.IMREAD_COLOR)
             userImg = cv2.resize(userImg, (180, 180))
