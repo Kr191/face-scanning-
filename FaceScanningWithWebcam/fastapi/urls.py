@@ -111,7 +111,7 @@ async def add_user(user_json: str = Form(...), file: UploadFile = File(...)):
             "last_name": user_dict["last_name"],
             "image_name": user_dict["image_name"],
             "created_at": user_dict["created_at"],
-            "url": f"{os.getenv("SUPABASE_URL")}/storage/v1/object/public/facescanningwithwebcam/images/{file.filename}",
+            "url": f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/facescanningwithwebcam/images/{file.filename}",
         },
     ]
 
