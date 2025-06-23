@@ -13,10 +13,10 @@ const WebcamStream = () => {
   };
 
   useEffect(() => {
-    // เมื่อกล้องพร้อมแล้วค่อยเริ่ม loop
+    // wait until webcam ready and start loop
     if (!isWebcamReady || !webcamRef.current) return;
 
-    // เริ่มส่งภาพทุก 1 วิ
+    // send an image every 1 sec
     intervalRef.current = setInterval(async () => {
       const imageSrc = webcamRef.current.getScreenshot();
 
@@ -43,7 +43,7 @@ const WebcamStream = () => {
       } catch (err) {
         console.error("❌ POST error:", err);
       }
-    }, 1000); // ทุก 1 วินาที
+    }, 1000); // every 1 sec (1000 ms)
 
     return () => {
       clearInterval(intervalRef.current);
@@ -63,7 +63,7 @@ const WebcamStream = () => {
       style={{
         width: "1280px",
         height: "720px",
-        border: "2px solid green",   // ใช้ดูว่ามีภาพแสดงไหม
+        border: "2px solid black",   
         borderRadius: "8px",
         marginTop: "1rem",
         }}
@@ -83,7 +83,7 @@ const WebcamStream = () => {
           }}
         />
       ) : (
-        <p>⏳ กำลังรอภาพจากกล้อง...</p>
+        <p> Wait for result ...</p>
       )}
     </div>
   );
