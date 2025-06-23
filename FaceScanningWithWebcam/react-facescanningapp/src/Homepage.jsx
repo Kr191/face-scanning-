@@ -7,18 +7,18 @@ function Homepage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const handleStartWebcam = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get("http://localhost:3001/api/webcam");
-      alert(res.data.message || "Webcam started");
-    } catch (error) {
-      console.error("Webcam error:", error);
-      alert("Failed to start webcam");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // const handleStartWebcam = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
+  //     const res = await axios.get("http://localhost:3001/api/webcam");
+  //     alert(res.data.message || "Webcam started");
+  //   } catch (error) {
+  //     console.error("Webcam error:", error);
+  //     alert("Failed to start webcam");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, []);
 
   return (
     <div className="homepage-container">
@@ -34,7 +34,7 @@ function Homepage() {
             </button>
             <button
               className="btn btn-success btn-lg"
-              onClick={handleStartWebcam}
+              onClick={() => navigate("/webcam")}
               disabled={loading}
             >
               {loading ? "Starting..." : "Start Webcam"}
