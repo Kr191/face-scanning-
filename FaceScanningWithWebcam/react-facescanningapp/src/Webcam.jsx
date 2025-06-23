@@ -8,7 +8,7 @@ const WebcamStream = () => {
   const [isWebcamReady, setIsWebcamReady] = useState(false);
 
   const handleUserMedia = () => {
-    console.log("✅ Webcam is ready");
+    console.log("Webcam is ready");
     setIsWebcamReady(true);
   };
 
@@ -21,11 +21,11 @@ const WebcamStream = () => {
       const imageSrc = webcamRef.current.getScreenshot();
 
       if (!imageSrc || !imageSrc.startsWith("data:image")) {
-        console.warn("⚠️ getScreenshot() ยังไม่ได้ภาพที่ถูกต้อง");
+        console.warn("⚠️ getScreenshot() not the right img");
         return;
       }
 
-      console.log("📷 ส่งภาพ:", imageSrc.substring(0, 30));
+      console.log("send img in base64:", imageSrc.substring(0, 30));
 
       try {
         const response = await fetch("http://localhost:3001/api/process_frame", {
@@ -38,7 +38,7 @@ const WebcamStream = () => {
         if (data.processed_image) {
           setProcessedImage(data.processed_image);
         } else {
-          console.warn("⚠️ ไม่ได้รับ processed_image จาก backend");
+          console.warn("⚠️ no processed_image from backend");
         }
       } catch (err) {
         console.error("❌ POST error:", err);

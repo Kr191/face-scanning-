@@ -131,10 +131,6 @@ def web_cam(frame: np.ndarray):
     # Always return a frame, even if no face found or not matched
     return frame
 
-        # cv2.imshow("หน้ามึงอ่ะ", img)
-        # if cv2.waitKey(1) & 0xFF == ord("q"):
-        #     break
-
 
 if __name__ == "__main__":
     web_cam()

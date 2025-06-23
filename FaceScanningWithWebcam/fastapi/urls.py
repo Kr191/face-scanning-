@@ -72,36 +72,36 @@ async def web_cam_message():
 async def process_frame(data: FrameRequest):
     try:
         base64_str = data.image
-        print("Base64 preview:", base64_str[:100])  # ดูแค่ 100 ตัวแรกพอ
+        print("Base64 preview:", base64_str[:100])
         print("Length of base64 string:", len(base64_str))
-        # ✅ ตรวจสอบและตัด prefix "data:image/xxx;base64,"
+        # Examine and cut prefix "data:image/xxx;base64,"
         if base64_str.startswith("data:image"):
             try:
                 base64_str = base64_str.split(",", 1)[1]
             except IndexError:
                 raise HTTPException(status_code=400, detail="Invalid base64 format: no comma found")
 
-        # ✅ แปลง base64 -> bytes
+        # Convert base64 -> bytes
         try:
             image_bytes = base64.b64decode(base64_str)
         except Exception as e:
             print("❌ Failed to decode base64:", e)
             raise HTTPException(status_code=400, detail="Invalid base64 encoding")
 
-        # ✅ แปลงเป็น PIL Image
+        # Convert to PIL Image
         try:
             image = Image.open(BytesIO(image_bytes)).convert("RGB")
         except Exception as e:
             print("❌ PIL cannot open image:", e)
             raise HTTPException(status_code=400, detail="Cannot identify image format")
 
-        # ✅ แปลงจาก RGB เป็น BGR เพื่อใช้กับ OpenCV
+        # Convert RGB to BGR
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-        # ✅ เรียกวิเคราะห์ภาพ (Webcam logic)
+        # Using webcam.py
         result_frame = webcam.web_cam(frame)
 
-        # ✅ แปลงกลับเป็น base64 สำหรับตอบกลับ
+        # Convert result frame to base64
         _, buffer = cv2.imencode('.jpg', result_frame)
         b64 = base64.b64encode(buffer).decode('utf-8')
         processed_image = f"data:image/jpeg;base64,{b64}"
@@ -109,7 +109,7 @@ async def process_frame(data: FrameRequest):
         return {"processed_image": processed_image}
 
     except HTTPException as e:
-        raise e  # re-raise ให้ FastAPI จัดการต่อ
+        raise e 
     except Exception as e:
         print("⚠️ Unexpected error in process_frame:", e)
         raise HTTPException(status_code=500, detail="Internal server error")
