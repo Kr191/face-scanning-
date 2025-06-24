@@ -1,4 +1,4 @@
-# install dlib
+# install dlib if you want to use CUDA
 
 pip uninstall dlib face_recognition
 
