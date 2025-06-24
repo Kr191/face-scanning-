@@ -22,3 +22,7 @@ python setup.py install
 
 
 pip install face_recognition
+
+
+--------------------------------------------------------------------------------------------------
+Then go to https://pytorch.org/ to install pytorch version for CUDA
