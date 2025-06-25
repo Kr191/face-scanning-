@@ -1,0 +1,43 @@
+.alluser-container {
+  padding: 1.5rem;
+}
+
+.alluser-title {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.user-info {
+  color: #6a5acd;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.user-meta {
+  font-size: 0.9rem;
+}
+
+.detail-btn {
+  background-color: #8873e0;
+  color: white;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 12px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 
 function RegisterForm() {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [image, setImage] = useState(null);
@@ -29,15 +30,11 @@ function RegisterForm() {
     formData.append("file", image);
 
     try {
-      const res = await axios.post(
-        "http://localhost:3001/api/adduser",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const res = await axios.post(`${API_URL}/api/adduser`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       alert("Register success!");
       console.log(res.data);
     } catch (error) {

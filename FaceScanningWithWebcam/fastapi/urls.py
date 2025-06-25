@@ -63,8 +63,6 @@ class FrameRequest(BaseModel):
 
 @api.get("/")
 async def web_cam_message():
-    # thread = threading.Thread(target=webcam.main)
-    # thread.start()
     return {"message": "successfully"}
 
 
@@ -72,36 +70,36 @@ async def web_cam_message():
 async def process_frame(data: FrameRequest):
     try:
         base64_str = data.image
-        print("Base64 preview:", base64_str[:100])  # ดูแค่ 100 ตัวแรกพอ
+        print("Base64 preview:", base64_str[:100])
         print("Length of base64 string:", len(base64_str))
-        # ✅ ตรวจสอบและตัด prefix "data:image/xxx;base64,"
+        # Examine and cut prefix "data:image/xxx;base64,"
         if base64_str.startswith("data:image"):
             try:
                 base64_str = base64_str.split(",", 1)[1]
             except IndexError:
                 raise HTTPException(status_code=400, detail="Invalid base64 format: no comma found")
 
-        # ✅ แปลง base64 -> bytes
+        # Convert base64 -> bytes
         try:
             image_bytes = base64.b64decode(base64_str)
         except Exception as e:
-            print("❌ Failed to decode base64:", e)
+            print("Failed to decode base64:", e)
             raise HTTPException(status_code=400, detail="Invalid base64 encoding")
 
-        # ✅ แปลงเป็น PIL Image
+        # Convert to PIL Image
         try:
             image = Image.open(BytesIO(image_bytes)).convert("RGB")
         except Exception as e:
-            print("❌ PIL cannot open image:", e)
+            print("PIL cannot open image:", e)
             raise HTTPException(status_code=400, detail="Cannot identify image format")
 
-        # ✅ แปลงจาก RGB เป็น BGR เพื่อใช้กับ OpenCV
+        # Convert RGB to BGR
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-        # ✅ เรียกวิเคราะห์ภาพ (Webcam logic)
+        # Using webcam.py
         result_frame = webcam.web_cam(frame)
 
-        # ✅ แปลงกลับเป็น base64 สำหรับตอบกลับ
+        # Convert result frame to base64
         _, buffer = cv2.imencode('.jpg', result_frame)
         b64 = base64.b64encode(buffer).decode('utf-8')
         processed_image = f"data:image/jpeg;base64,{b64}"
@@ -109,7 +107,7 @@ async def process_frame(data: FrameRequest):
         return {"processed_image": processed_image}
 
     except HTTPException as e:
-        raise e  # re-raise ให้ FastAPI จัดการต่อ
+        raise e 
     except Exception as e:
         print("⚠️ Unexpected error in process_frame:", e)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -183,6 +181,8 @@ async def get_user(user_id: str):
         raise HTTPException(status_code=400, detail="Invalid user ID")
 
     user = collection.find_one({"_id": object_id})
+    img_url = f'{url}/storage/v1/object/public/facescanningwithwebcam/images/{user["image_name"]}'
+    
     if user:
         return {
             "_id": str(user["_id"]),
@@ -191,6 +191,7 @@ async def get_user(user_id: str):
             "image_name": user["image_name"],
             "created_at": user["created_at"],
             "updated_at": user["updated_at"],
+            "image_url": img_url
         }
     else:
         raise HTTPException(status_code=404, detail="User not found")
@@ -220,7 +221,7 @@ async def find_user_loggedin_from_id(user_id: str):
     all_time_login = []
     user_login = collection_login.find({"user_id": object_id})
 
-    if user_login == []:
+    if not user_login:
         raise HTTPException(status_code=404, detail="No users found")
     else:
         for logged_in in user_login:
