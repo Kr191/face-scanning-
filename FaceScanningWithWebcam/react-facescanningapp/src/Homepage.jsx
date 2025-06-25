@@ -26,12 +26,6 @@ function Homepage() {
             >
               {loading ? "Starting..." : "Start Webcam"}
             </button>
-            <button
-              className="btn btn-danger btn-lg"
-              onClick={() => navigate("/admin")}
-            >
-              Admin
-            </button>
           </div>
         </div>
       </div>
