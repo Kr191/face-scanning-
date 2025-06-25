@@ -3,62 +3,69 @@
 # https://docs.docker.com/go/compose-spec-reference/
 
 services:
+  # frontend service for the React application
   app_frontend:
-    build: ./react-facescanningapp
+    build:
+      context: ./react-facescanningapp
+      dockerfile: Dockerfile
+    container_name: app_frontend
+    init: true
     volumes:
-      - ./react-facescanningapp:/app
-      - /app/node_modules
+      - type: bind
+        source: ./react-facescanningapp
+        target: /app
+      - type: volume
+        target: /app/node_modules
     command: npm run dev
     ports:
       - "5173:5173"
+    networks:
+      - frontend
 
+  # API service for face detection
   face_api:
-    build: ./fastapi
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+      target: dev
+    init: true
+    container_name: face_api
     command: uvicorn urls:api --host 0.0.0.0 --port 3001
     volumes:
-      - ./fastapi:/code
+      - type: bind
+        source: ./fastapi
+        target: /code
+      - type: bind
+        source: ./graphic
+        target: /graphic
+    depends_on:
+      - db
     ports:
       - "3001:3001"
-
     environment:
-      - MONGO_URI=mongodb://mongo:27017/
+      - MONGO_URI=mongodb://admin:facescanadmin@mongo:27017/auth?authSource=admin
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
 
-  mongo:
+  # use mongo to store user data
+  db:
     image: mongo:6
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=facescanadmin
     volumes:
-      - ./mongo:/data/db
+      - ./mongo_data:/data/db
     ports:
       - "27017:27017"
-# The commented out section below is an example of how to define a PostgreSQL
-# database that your application can use. `depends_on` tells Docker Compose to
-# start the database before your application. The `db-data` volume persists the
-# database data between container restarts. The `db-password` secret is used
-# to set the database password. You must create `db/password.txt` and add
-# a password of your choosing to it before running `docker-compose up`.
-#     depends_on:
-#       db:
-#         condition: service_healthy
-#   db:
-#     image: postgres
-#     restart: always
-#     user: postgres
-#     secrets:
-#       - db-password
-#     volumes:
-#       - db-data:/var/lib/postgresql/data
-#     environment:
-#       - POSTGRES_DB=example
-#       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
-#     expose:
-#       - 5432
-#     healthcheck:
-#       test: [ "CMD", "pg_isready" ]
-#       interval: 10s
-#       timeout: 5s
-#       retries: 5
-# volumes:
-#   db-data:
-# secrets:
-#   db-password:
-#     file: db/password.txt
+    restart: always
+    networks:
+      - backend
 
+volumes:
+  mongo_data:
+
+networks:
+  frontend:
+  backend:

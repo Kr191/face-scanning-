@@ -19,6 +19,8 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
+FROM base as dev 
+
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -32,12 +34,9 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-
 COPY requirements.txt .
 
-RUN pip install --upgrade pip setuptools
-
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip setuptools && pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
