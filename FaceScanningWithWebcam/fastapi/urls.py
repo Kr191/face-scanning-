@@ -63,8 +63,6 @@ class FrameRequest(BaseModel):
 
 @api.get("/")
 async def web_cam_message():
-    # thread = threading.Thread(target=webcam.main)
-    # thread.start()
     return {"message": "successfully"}
 
 
@@ -85,14 +83,14 @@ async def process_frame(data: FrameRequest):
         try:
             image_bytes = base64.b64decode(base64_str)
         except Exception as e:
-            print("❌ Failed to decode base64:", e)
+            print("Failed to decode base64:", e)
             raise HTTPException(status_code=400, detail="Invalid base64 encoding")
 
         # Convert to PIL Image
         try:
             image = Image.open(BytesIO(image_bytes)).convert("RGB")
         except Exception as e:
-            print("❌ PIL cannot open image:", e)
+            print("PIL cannot open image:", e)
             raise HTTPException(status_code=400, detail="Cannot identify image format")
 
         # Convert RGB to BGR
@@ -183,6 +181,8 @@ async def get_user(user_id: str):
         raise HTTPException(status_code=400, detail="Invalid user ID")
 
     user = collection.find_one({"_id": object_id})
+    img_url = f'{url}/storage/v1/object/public/facescanningwithwebcam/images/{user["image_name"]}'
+    
     if user:
         return {
             "_id": str(user["_id"]),
@@ -191,6 +191,7 @@ async def get_user(user_id: str):
             "image_name": user["image_name"],
             "created_at": user["created_at"],
             "updated_at": user["updated_at"],
+            "image_url": img_url
         }
     else:
         raise HTTPException(status_code=404, detail="User not found")
@@ -220,7 +221,7 @@ async def find_user_loggedin_from_id(user_id: str):
     all_time_login = []
     user_login = collection_login.find({"user_id": object_id})
 
-    if user_login == []:
+    if not user_login:
         raise HTTPException(status_code=404, detail="No users found")
     else:
         for logged_in in user_login:

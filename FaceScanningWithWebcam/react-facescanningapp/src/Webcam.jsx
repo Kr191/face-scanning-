@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
 
 const WebcamStream = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
   const webcamRef = useRef(null);
   const intervalRef = useRef(null);
   const [processedImage, setProcessedImage] = useState(null);
@@ -28,7 +29,7 @@ const WebcamStream = () => {
       console.log("send img in base64:", imageSrc.substring(0, 30));
 
       try {
-        const response = await fetch("http://localhost:3001/api/process_frame", {
+        const response = await fetch(`${API_URL}/api/process_frame`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: imageSrc }),
@@ -41,9 +42,9 @@ const WebcamStream = () => {
           console.warn("⚠️ no processed_image from backend");
         }
       } catch (err) {
-        console.error("❌ POST error:", err);
+        console.error("POST error:", err);
       }
-    }, 1000); // every 1 sec (1000 ms)
+    }, 700); // every 0.7 sec (700 ms)
 
     return () => {
       clearInterval(intervalRef.current);
@@ -52,39 +53,57 @@ const WebcamStream = () => {
 
   return (
     <div style={{ textAlign: "center", padding: "1rem" }}>
-      <h2>📸 Face Recognition Preview</h2>
+      <h2>Face scanning</h2>
 
-      <Webcam
-      ref={webcamRef}
-      audio={false}
-      screenshotFormat="image/jpeg"
-      onUserMedia={handleUserMedia}
-      videoConstraints={{ width: 640, height: 480, facingMode: "user" }}
-      style={{
-        width: "1280px",
-        height: "720px",
-        border: "2px solid black",   
-        borderRadius: "8px",
-        marginTop: "1rem",
+      <div
+        style={{
+          position: "relative",
+          width: "1280px",
+          height: "720px",
+          margin: "0 auto",
+          border: "4px solid black",
+          borderRadius: "8px",
         }}
-      />
-
-
-      {processedImage ? (
-        <img
-          src={processedImage}
-          alt="Processed Frame"
+      >
+        {/* Webcam */}
+        <Webcam
+          ref={webcamRef}
+          audio={false}
+          screenshotFormat="image/jpeg"
+          onUserMedia={handleUserMedia}
+          videoConstraints={{ width: 1280, height: 720 }}
           style={{
-            width: "1280px",
-            height: "720px",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
             borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-            marginTop: "1rem",
+            zIndex: 1,
           }}
         />
-      ) : (
-        <p> Wait for result ...</p>
-      )}
+
+        {/* Processed Image */}
+        {processedImage && (
+          <img
+            src={processedImage}
+            alt="Processed Frame"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              borderRadius: "8px",
+              zIndex: 2,
+              pointerEvents: "none",
+            }}
+          />
+        )}
+      </div>
+
+      {/* ข้อความรอ */}
+      {!processedImage && <p>⏳ Wait for result...</p>}
     </div>
   );
 };

@@ -2,29 +2,28 @@ import React, { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Homepage.css";
+import AdminNavbar from "./AdminNavbar";
 
-function Homepage() {
+function AdminHomepage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
 
   return (
     <div className="homepage-container">
       <div className="w-100">
         <div className="text-center p-4 bg-white shadow rounded">
-          <h1 className="mb-4 fs-4">Welcome to Face Scanning System</h1>
+          <h1 className="mb-4 fs-4">Welcome to Admin Homepage</h1>
           <div className="d-grid gap-3">
             <button
-              className="btn btn-primary btn-lg"
-              onClick={() => navigate("/register")}
+              className="btn btn-info btn-lg"
+              onClick={() => navigate("/admin/users")}
             >
-              Register
+              See all user account
             </button>
             <button
-              className="btn btn-success btn-lg"
-              onClick={() => navigate("/webcam")}
-              disabled={loading}
+              className="btn btn-info btn-lg"
+              onClick={() => navigate("/admin/usersloggedin")}
             >
-              {loading ? "Starting..." : "Start Webcam"}
+              See all user logged in
             </button>
           </div>
         </div>
@@ -33,4 +32,4 @@ function Homepage() {
   );
 }
 
-export default Homepage;
+export default AdminHomepage;
