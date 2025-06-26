@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function RegisterForm() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -7,6 +8,7 @@ function RegisterForm() {
   const [lastName, setLastName] = useState("");
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const navigate = useNavigate();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -37,6 +39,7 @@ function RegisterForm() {
       });
       alert("Register success!");
       console.log(res.data);
+      navigate("/");
     } catch (error) {
       alert("Register failed.");
       console.error(error);
