@@ -1,0 +1,51 @@
+.webcam-main {
+  text-align: center;
+  padding: 1rem;
+}
+
+.webcam-frame-container {
+  position: relative;
+  width: 1280px;
+  height: 720px;
+  margin: 0 auto;
+  border: 4px solid black;
+  border-radius: 8px;
+}
+
+.webcam-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.webcam-processed-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.webcam-capture-btn {
+  margin-top: 1.5rem;
+  padding: 0.7rem 2.5rem;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  background: #6a5acd;
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.webcam-capture-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}

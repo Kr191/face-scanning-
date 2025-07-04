@@ -7,7 +7,8 @@ import pickle
 from datetime import datetime
 from pymongo import MongoClient
 import urllib.request
-import time
+import uuid
+import io
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -45,8 +46,9 @@ def web_cam(frame: np.ndarray):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     imgS = cv2.resize(frame, (0, 0), None, 0.25, 0.25)
     imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
+    file_name = f"{uuid.uuid4()}.jpg"
 
-    faceCurFrame = face_recognition.face_locations(imgS)
+    faceCurFrame = face_recognition.face_locations(imgS) 
     encodeCurFrame = face_recognition.face_encodings(imgS, faceCurFrame)
 
     for encodeFace, faceLoc in zip(encodeCurFrame, faceCurFrame):
@@ -75,31 +77,11 @@ def web_cam(frame: np.ndarray):
 
             user_data = collection.find_one({"image_name": imgName[matchIndex]})
 
-            # Check if user has already logged in today
-            login_today = collection_login.find_one(
-                {
-                    "user_id": user_data["_id"],
-                    "loggedInAt": {"$regex": f"^{timestamp[:10]}"},
-                }
-            )
-
             img_url = f"{url}/storage/v1/object/public/facescanningwithwebcam/images/{imgName[matchIndex]}"
             response = urllib.request.urlopen(img_url)
             userImg = np.asarray(bytearray(response.read()), dtype=np.uint8)
             userImg = cv2.imdecode(userImg, cv2.IMREAD_COLOR)
             userImg = cv2.resize(userImg, (180, 180))
-
-            if login_today is None:
-                # Log this login to the database (once per day)
-                collection_login.insert_one(
-                    {
-                        "user_id": user_data["_id"],
-                        "first_name": user_data["first_name"],
-                        "last_name": user_data["last_name"],
-                        "loggedInAt": timestamp,
-                    }
-                )
-                print("Logged in at", timestamp)
 
             # Draw UI for matched user
             imgModeResized = cv2.resize(imgMode[1], (target_w, target_h))
@@ -126,8 +108,40 @@ def web_cam(frame: np.ndarray):
             cv2.putText(
                 frame, timestamp, (835, 600), cv2.FONT_ITALIC, 1, (0, 0, 0), 2
             )
+
+             # Check if user has already logged in today
+            login_today = collection_login.find_one(
+                {
+                    "user_id": user_data["_id"],
+                    "loggedInAt": {"$regex": f"^{timestamp[:10]}"},
+                }
+            )
+            if login_today is None:
+                # Log this login to the database (once per day)
+                collection_login.insert_one(
+                    {
+                        "user_id": user_data["_id"],
+                        "first_name": user_data["first_name"],
+                        "last_name": user_data["last_name"],
+                        "loggedInAt": timestamp,
+                        "image_name": file_name
+                    }
+                )
+                print("Logged in at", timestamp)
+                 # add frame to supabase
+                success, buffer = cv2.imencode('.jpg', frame)
+                if success:
+                    img_bytes = buffer.tobytes()
+                    response = supabase.storage.from_("facescanningwithwebcam").upload(
+                        file=img_bytes,
+                        path=f'images/loggedin_history/{file_name}',
+                        file_options={"cache-control": "3600", "upsert": "false"},
+                    )
+                else:
+                    print("Failed to encode frame as JPEG for upload.")
             break  # Only process the first matched face
 
+   
     # Always return a frame, even if no face found or not matched
     return frame
 

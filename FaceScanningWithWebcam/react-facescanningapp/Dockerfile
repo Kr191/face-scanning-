@@ -8,13 +8,15 @@
 
 ARG NODE_VERSION=22.11.0
 
-FROM node:${NODE_VERSION}-alpine
+FROM node:${NODE_VERSION}-alpine as base
 
 WORKDIR /app
 
-COPY package*.json package-lock.json* ./
+COPY package*.json  .
 
-RUN npm ci
+RUN --mount=type=cache,target=/app/.npm \ 
+    npm set cache /app/.npm && \
+    npm install
 
 COPY . .
 

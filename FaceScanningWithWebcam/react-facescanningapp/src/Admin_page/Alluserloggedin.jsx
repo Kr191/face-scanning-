@@ -52,7 +52,7 @@ const Alluser = () => {
 
             <button
               className="detail-btn"
-              onClick={() => navigate(`/admin/users/user/${user.user_id}`)}
+              onClick={() => navigate(`/admin/usersloggedin/${user._id}`)}
             >
               Detail
             </button>

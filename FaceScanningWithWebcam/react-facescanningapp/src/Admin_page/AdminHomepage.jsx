@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Homepage.css";
+import "../User_page/Homepage.css";
 import AdminNavbar from "./AdminNavbar";
 
 function AdminHomepage() {
