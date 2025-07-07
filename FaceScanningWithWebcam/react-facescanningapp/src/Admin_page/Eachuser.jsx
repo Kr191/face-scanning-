@@ -46,6 +46,7 @@ const Eachuser = () => {
 
   return (
     <div>
+      <title>User Details</title>
       <AdminNavbar />
       <div className="eachuser-main">
         {/* User image and buttons */}
@@ -99,7 +100,11 @@ const Eachuser = () => {
                     new Date(a.loggedInAt).getTime()
                 )
                 .map((log) => (
-                  <div key={log._id} className="eachuser-history-item">
+                  <div
+                    key={log._id}
+                    className="eachuser-history-item"
+                    onClick={() => navigate(`/admin/usersloggedin/${log._id}`)}
+                  >
                     Logged in at:{" "}
                     {log.loggedInAt
                       ? new Date(log.loggedInAt).toLocaleString()

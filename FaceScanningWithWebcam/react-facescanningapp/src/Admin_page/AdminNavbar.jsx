@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Container, Form, FormControl, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import "./AdminNavbar.css";
 
 const AdminNavbar = () => {
   const navigate = useNavigate();
@@ -48,10 +49,7 @@ const AdminNavbar = () => {
   }, []);
 
   return (
-    <Navbar
-      expand="lg"
-      style={{ backgroundColor: "#B388EB", padding: "0.5rem 1rem" }}
-    >
+    <Navbar expand="lg" className="admin-navbar">
       <Container fluid>
         <Nav className="me-auto align-items-center">
           <Nav.Link
@@ -71,53 +69,25 @@ const AdminNavbar = () => {
         </Nav>
 
         {/* Search bar */}
-        <div
-          style={{ position: "relative", flex: 1, maxWidth: "400px" }}
-          ref={dropdownRef}
-        >
+        <div className="admin-navbar-search-container" ref={dropdownRef}>
           <Form className="d-flex">
             <FormControl
               type="search"
               placeholder="Search"
-              className="me-2"
+              className="me-2 admin-navbar-search-input"
               aria-label="Search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{
-                borderRadius: "999px",
-                paddingLeft: "1rem",
-                height: "36px",
-                border: "none",
-                boxShadow: "none",
-              }}
               onFocus={() => setShowDropdown(filtered.length > 0)}
               autoComplete="off"
             />
           </Form>
           {showDropdown && (
-            <div
-              style={{
-                position: "absolute",
-                top: "44px",
-                left: 0,
-                right: 0,
-                background: "#fff",
-                border: "1px solid #b388eb",
-                borderRadius: "0 0 12px 12px",
-                zIndex: 1000,
-                boxShadow: "0 4px 12px rgba(179,136,235,0.15)",
-                maxHeight: "250px",
-                overflowY: "auto",
-              }}
-            >
+            <div className="admin-navbar-dropdown">
               {filtered.map((user) => (
                 <div
                   key={user._id}
-                  style={{
-                    padding: "0.7rem 1rem",
-                    cursor: "pointer",
-                    borderBottom: "1px solid #eee",
-                  }}
+                  className="admin-navbar-dropdown-item"
                   onClick={() => {
                     navigate(`/admin/users/user/${user._id}`);
                     setShowDropdown(false);

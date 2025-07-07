@@ -48,6 +48,7 @@ function RegisterForm() {
 
   return (
     <div className="container min-vh-100 d-flex justify-content-center align-items-center bg-light">
+      <title>Register</title>
       <form
         onSubmit={handleSubmit}
         className="bg-white p-4 rounded shadow"

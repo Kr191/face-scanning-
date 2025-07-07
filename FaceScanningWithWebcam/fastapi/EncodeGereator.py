@@ -42,7 +42,6 @@ def encode_generator(image, image_name):
     
     image = np.frombuffer(image, np.uint8)
     user_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    user_image_name  = image_name
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     encoding = face_recognition.face_encodings(user_image)[0]

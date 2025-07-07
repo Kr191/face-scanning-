@@ -5,13 +5,13 @@ import { useNavigate } from "react-router-dom";
 import "./Alluser.css";
 
 const Alluser = () => {
-  const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/api/getusers`)
+      .get(`${API_URL}/api/getalluserloggedin`)
       .then((res) => {
         setUsers(res.data);
       })
@@ -19,19 +19,20 @@ const Alluser = () => {
         console.error("Error fetching users:", err);
       });
   }, []);
-
-  // Sort users by created_at descending (latest first)
+  // Sort users by loggedInAt descending (latest first)
   const sortedUsers = [...users].sort((a, b) => {
-    if (!a.created_at) return 1;
-    if (!b.created_at) return -1;
-    return new Date(b.created_at) - new Date(a.created_at);
+    // If loggedInAt is missing, treat as oldest
+    if (!a.loggedInAt) return 1;
+    if (!b.loggedInAt) return -1;
+    return new Date(b.loggedInAt) - new Date(a.loggedInAt);
   });
 
   return (
     <div>
+      <title>All User Logged In</title>
       <AdminNavbar />
       <div className="alluser-container">
-        <h3 className="alluser-title">User:</h3>
+        <h3 className="alluser-title">Logged in history:</h3>
 
         {sortedUsers.map((user) => (
           <div key={user._id} className="user-card">
@@ -42,21 +43,17 @@ const Alluser = () => {
                 {user.last_name}
               </div>
               <div className="user-meta">
-                Created at:{" "}
-                {user.created_at
-                  ? new Date(user.created_at).toLocaleString()
-                  : "-"}
-                {",      "}
-                Updated at:{" "}
-                {user.updated_at
-                  ? new Date(user.updated_at).toLocaleString()
+                Logged in time:{" "}
+                {user.loggedInAt
+                  ? new Date(user.loggedInAt).toLocaleString()
                   : "-"}{" "}
+                {"      "}
               </div>
             </div>
 
             <button
               className="detail-btn"
-              onClick={() => navigate(`/admin/users/user/${user._id}`)}
+              onClick={() => navigate(`/admin/usersloggedin/${user._id}`)}
             >
               Detail
             </button>

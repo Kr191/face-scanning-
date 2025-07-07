@@ -11,19 +11,6 @@ function UpdateForm() {
   const navigate = useNavigate();
   const { user_id } = useParams();
 
-  //   useEffect(() => {
-  //     // Fetch current user data to prefill
-  //     axios
-  //       .get(`${API_URL}/api/getuser/${user_id}`)
-  //       .then((res) => {
-  //         setFirstName(res.data.first_name || "");
-  //         setLastName(res.data.last_name || "");
-  //       })
-  //       .catch((err) => {
-  //         console.error("Error fetching user:", err);
-  //       });
-  //   }, [API_URL, user_id]);
-
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -41,6 +28,7 @@ function UpdateForm() {
 
   return (
     <div>
+      <title>Update User</title>
       <AdminNavbar />
       <div className="updateuser-container">
         <form className="updateuser-form" onSubmit={handleUpdate}>

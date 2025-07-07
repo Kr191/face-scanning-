@@ -1,6 +1,7 @@
 import json
 import webcam
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from websockets.exceptions import ConnectionClosed
 from pymongo import MongoClient
 from pydantic import BaseModel
@@ -13,7 +14,7 @@ import pickle
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
-import base64, re
+import base64
 from PIL import Image
 import numpy as np
 from io import BytesIO
@@ -25,15 +26,13 @@ api = FastAPI()
 
 api.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3001",
-        "http://localhost:3002",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ALLOW_IP = {"127.0.0.1", "192.168.1.100"}
 
 MONGODB_URI = os.getenv("MONGODB_URI")
 url: str = os.getenv("SUPABASE_URL")
@@ -98,7 +97,8 @@ async def process_frame(data: FrameRequest):
 
         # Using webcam.py
         result_frame = webcam.web_cam(frame)
-
+        if result_frame is None:
+            return {"processed_image": None}
         # Convert result frame to base64
         _, buffer = cv2.imencode('.jpg', result_frame)
         b64 = base64.b64encode(buffer).decode('utf-8')
@@ -230,6 +230,24 @@ async def find_user_loggedin_from_id(user_id: str):
             all_time_login.append(logged_in)
         return all_time_login
 
+@api.get("/api/eachuser/loggedin/{loggedin_id}")
+async def find_user_loggedin_from_loggedin_id(loggedin_id: str):
+    try:
+        object_id = ObjectId(loggedin_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+    
+    loggedin_history = collection_login.find_one({"_id": object_id})
+
+    if not loggedin_history:
+        raise HTTPException(status_code=404, detail="No users found")
+    else:
+       loggedin_history["_id"] = str(loggedin_history["_id"])
+       loggedin_history["user_id"] = str(loggedin_history["user_id"])
+       loggedin_history["image_name"] = f'{url}/storage/v1/object/public/facescanningwithwebcam/images/loggedin_history/{loggedin_history["image_name"]}'
+    
+    return loggedin_history
+    
 
 @api.put("/api/updateuser/{user_id}")
 async def update_user(user_id: str, update_user: UpdateUser):
@@ -288,3 +306,24 @@ async def delete_user(user_id: str):
         return {"message": "Delete user Successfully"}
     else:
         raise HTTPException(status_code=404, detail="User not found")
+
+# @api.middleware("http")
+# async def ip_whitelist_middleware(request: Request, call_next):
+#     path = request.url.path
+#     client_ip = request.headers.get("X-Forwarded-For", request.client.host)  # รองรับ proxy
+
+#     # เช็คเฉพาะ path ที่ต้องการป้องกัน
+#     if path.startswith("/admin") or path.startswith("/api/check-admin-access"):
+#         if client_ip not in ALLOW_IP:
+#             return JSONResponse(status_code=403, content={"detail": "Access denied for IP: " + client_ip})
+
+#     # ให้ผ่านต่อไปยัง endpoint ปกติ
+#     response = await call_next(request)
+#     return response
+
+# @api.get("/api/check-admin-access")
+# async def check_admin_access(request: Request):
+#     client_ip = request.headers.get("X-Forwarded-For", request.client.host)
+#     if client_ip in ALLOW_IP:
+#         return {"status": "ok"}
+#     return JSONResponse(status_code=403, content={"detail": "Access denied"})
