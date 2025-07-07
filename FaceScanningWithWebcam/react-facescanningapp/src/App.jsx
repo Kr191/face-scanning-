@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Homepage from "./User_page/Homepage";
 import Register from "./User_page/Register"; // อย่าลืมสร้างหรือ import ให้ถูก path
-import Webcamstream from "./User_page/webcam";
+import Webcamstream from "./User_page/Webcam";
 import AdminHomepage from "./Admin_page/AdminHomepage";
 import Alluser from "./Admin_page/Alluser";
 import Alluserloggedin from "./Admin_page/Alluserloggedin";

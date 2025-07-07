@@ -108,16 +108,15 @@ async def process_frame(data: FrameRequest):
 
     except HTTPException as e:
         raise e 
-    except Exception as e:
-        print("⚠️ Unexpected error in process_frame:", e)
-        raise HTTPException(status_code=500, detail="Internal server error")
+    # except Exception as e:
+    #     print("⚠️ Unexpected error in process_frame:", e)
+    #     raise HTTPException(status_code=500, detail="Internal server error")
 
 @api.post("/api/adduser")
 async def add_user(user_json: str = Form(...), file: UploadFile = File(...)):
     print("Raw user_json:", user_json)
     try:
         user_data = json.loads(user_json)
-        print("Parsed user_data:", user_data)
         user = User(**user_data)
     except Exception as e:
         print("Error while parsing JSON or creating User:", str(e))
@@ -146,6 +145,12 @@ async def add_user(user_json: str = Form(...), file: UploadFile = File(...)):
 
     # add data to mongoDB
     adding = collection.insert_one(user_dict)
+    print("user_data:", user_dict)
+
+    # reload encodings after adding a new user
+    if os.path.exists("EncodeFile.p"):
+        reload = webcam.reload_encodings()
+        
 
     return [
         {"message": "user added"},
@@ -275,6 +280,10 @@ async def update_user(user_id: str, update_user: UpdateUser):
 
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
+    
+     # reload encodings after adding a new user
+    if os.path.exists("EncodeFile.p"):
+        reload = webcam.reload_encodings()
 
     return {"message": "User Updated Successfully"}
 
@@ -297,11 +306,17 @@ async def delete_user(user_id: str):
 
     with open("EncodeFile.p", "wb") as save_file:
         pickle.dump(filtered_data, save_file)
+    print("EncodeFile.p updated")
 
     path = f"images/{delete_user_image['image_name']}"
     response = supabase.storage.from_("facescanningwithwebcam").remove([path])
 
     result = collection.delete_one({"_id": object_id})
+
+     # reload encodings after adding a new user
+    if os.path.exists("EncodeFile.p"):
+        reload = webcam.reload_encodings()
+        
     if result.deleted_count == 1:
         return {"message": "Delete user Successfully"}
     else:

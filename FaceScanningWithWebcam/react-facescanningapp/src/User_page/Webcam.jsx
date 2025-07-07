@@ -52,14 +52,6 @@ const WebcamStream = () => {
     }
   };
 
-  useEffect(() => {
-    let interval;
-    if (isWebcamReady) {
-      interval = setInterval(handleDetectFaces, 66);
-    }
-    return () => clearInterval(interval);
-  }, [isWebcamReady]);
-
   const getCombinedScreenshot = () => {
     if (!webcamRef.current || !canvasRef.current) return null;
 
@@ -81,32 +73,33 @@ const WebcamStream = () => {
     return tempCanvas.toDataURL("image/jpeg");
   };
 
-  const handleCapture = async () => {
-    if (!webcamRef.current) return;
-    const imageSrc = getCombinedScreenshot();
+  useEffect(() => {
+    let interval;
+    if (isWebcamReady) {
+      interval = setInterval(handleDetectFaces, 66);
+      interval = setInterval(async () => {
+        const imageSrc = getCombinedScreenshot();
+        if (!imageSrc || !imageSrc.startsWith("data:image")) return;
 
-    if (!imageSrc || !imageSrc.startsWith("data:image")) {
-      alert("Could not capture image from webcam.");
-      return;
+        setLoading(true);
+        try {
+          const response = await axios.post(
+            `${API_URL}/api/process_frame`,
+            { image: imageSrc },
+            { headers: { "Content-Type": "application/json" } }
+          );
+          if (response.data.processed_image) {
+            setProcessedImage(response.data.processed_image);
+            setTimeout(() => setProcessedImage(null), 2000); // 2 seconds
+          }
+        } catch (err) {
+          console.error(err);
+        }
+        setLoading(false);
+      }, 3500); // 3.5 seconds
     }
-
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/process_frame`,
-        { image: imageSrc },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      if (response.data.processed_image) {
-        setProcessedImage(response.data.processed_image);
-        setTimeout(() => setProcessedImage(null), 3000);
-      }
-    } catch (err) {
-      alert("Error sending image to backend.");
-      console.error(err);
-    }
-    setLoading(false);
-  };
+    return () => clearInterval(interval);
+  }, [isWebcamReady]);
 
   return (
     <div className="webcam-main">
@@ -141,14 +134,6 @@ const WebcamStream = () => {
           />
         )}
       </div>
-
-      <button
-        onClick={handleCapture}
-        disabled={!isWebcamReady || loading}
-        className="webcam-capture-btn"
-      >
-        {loading ? "Processing..." : "Capture"}
-      </button>
     </div>
   );
 };
