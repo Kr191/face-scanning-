@@ -97,7 +97,8 @@ async def process_frame(data: FrameRequest):
 
         # Using webcam.py
         result_frame = webcam.web_cam(frame)
-
+        if result_frame is None:
+            return {"processed_image": None}
         # Convert result frame to base64
         _, buffer = cv2.imencode('.jpg', result_frame)
         b64 = base64.b64encode(buffer).decode('utf-8')

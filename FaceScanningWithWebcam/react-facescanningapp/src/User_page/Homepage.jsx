@@ -9,6 +9,7 @@ function Homepage() {
 
   return (
     <div className="homepage-container">
+      <title>Face Scanning System</title>
       <div className="w-100">
         <div className="text-center p-4 bg-white shadow rounded">
           <h1 className="mb-4 fs-4">Welcome to Face Scanning System</h1>

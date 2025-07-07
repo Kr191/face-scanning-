@@ -29,6 +29,7 @@ const Alluser = () => {
 
   return (
     <div>
+      <title>All User Logged In</title>
       <AdminNavbar />
       <div className="alluser-container">
         <h3 className="alluser-title">Logged in history:</h3>

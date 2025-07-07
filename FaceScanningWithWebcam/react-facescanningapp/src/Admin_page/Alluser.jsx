@@ -29,6 +29,7 @@ const Alluser = () => {
 
   return (
     <div>
+      <title>All Users</title>
       <AdminNavbar />
       <div className="alluser-container">
         <h3 className="alluser-title">User:</h3>

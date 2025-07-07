@@ -9,6 +9,7 @@ function AdminHomepage() {
 
   return (
     <div className="homepage-container">
+      <title>Admin Homepage</title>
       <div className="w-100">
         <div className="text-center p-4 bg-white shadow rounded">
           <h1 className="mb-4 fs-4">Welcome to Admin Homepage</h1>

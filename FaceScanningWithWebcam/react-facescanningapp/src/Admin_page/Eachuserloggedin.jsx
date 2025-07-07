@@ -21,6 +21,7 @@ const Eachuserloggedin = () => {
   }, [API_URL, loggedin_id]);
   return (
     <div>
+      <title>Each User Logged In</title>
       <AdminNavbar />
       <div className="eachuserloggedin-img-container">
         {!loggedin ? (

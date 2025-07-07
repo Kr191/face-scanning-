@@ -46,6 +46,7 @@ const Eachuser = () => {
 
   return (
     <div>
+      <title>User Details</title>
       <AdminNavbar />
       <div className="eachuser-main">
         {/* User image and buttons */}

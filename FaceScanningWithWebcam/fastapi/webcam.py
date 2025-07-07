@@ -39,41 +39,37 @@ file.close()
 imgName = [name for name, encode in encodedImgWithName]
 encodedImg = [encode for name, encode in encodedImgWithName]
 
+timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 def web_cam(frame: np.ndarray):
     target_h = 633
     target_w = 414
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     imgS = cv2.resize(frame, (0, 0), None, 0.25, 0.25)
     imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
     file_name = f"{uuid.uuid4()}.jpg"
 
     faceCurFrame = face_recognition.face_locations(imgS) 
+    if faceCurFrame == []:
+        return None  # No face found, return None
+    
     encodeCurFrame = face_recognition.face_encodings(imgS, faceCurFrame)
 
     for encodeFace, faceLoc in zip(encodeCurFrame, faceCurFrame):
         matches = face_recognition.compare_faces(encodedImg, encodeFace)
         faceDist = face_recognition.face_distance(encodedImg, encodeFace)
         matchIndex = np.argmin(faceDist)
-        if round(min(faceDist), 2) >= 0.56:
-            # Unmatched face
-            offsetY = -170
-            offsetX = -50
-            y1, x2, y2, x1 = faceLoc
-            y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
-            bbox = 55 + x1 + offsetX, 162 + y1 + offsetY, x2 - x1, y2 - y1
-            frame = cvzone.cornerRect(frame, bbox, rt=0)
-            imgModeResized = cv2.resize(imgMode[2], (target_w, target_h))
-            frame[44 : 44 + target_h, 808 : 808 + target_w] = imgModeResized
+        if round(min(faceDist), 2) >= 0.56:          
+            img_to_return = cv2.resize(imgMode[2], (target_w, target_h))
 
         if matches[matchIndex]:
             # Matched face
-            offsetY = -170
-            offsetX = -50
-            y1, x2, y2, x1 = faceLoc
-            y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
-            bbox = 55 + x1 + offsetX, 162 + y1 + offsetY, x2 - x1, y2 - y1
-            frame = cvzone.cornerRect(frame, bbox, rt=0)
+            # offsetY = -170
+            # offsetX = -50
+            # y1, x2, y2, x1 = faceLoc
+            # y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
+            # bbox = 55 + x1 + offsetX, 162 + y1 + offsetY, x2 - x1, y2 - y1
+            # frame = cvzone.cornerRect(frame, bbox, rt=0)
 
             user_data = collection.find_one({"image_name": imgName[matchIndex]})
 
@@ -109,6 +105,9 @@ def web_cam(frame: np.ndarray):
                 frame, timestamp, (835, 600), cv2.FONT_ITALIC, 1, (0, 0, 0), 2
             )
 
+            # image crop
+            img_to_return = frame[44 : 44 + target_h, 808 : 808 + target_w]
+
              # Check if user has already logged in today
             login_today = collection_login.find_one(
                 {
@@ -143,7 +142,7 @@ def web_cam(frame: np.ndarray):
 
    
     # Always return a frame, even if no face found or not matched
-    return frame
+    return img_to_return
 
 
 if __name__ == "__main__":
