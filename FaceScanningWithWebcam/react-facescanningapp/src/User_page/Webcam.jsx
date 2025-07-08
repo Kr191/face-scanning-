@@ -2,6 +2,7 @@ import React, { use, useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
 import * as faceApi from "face-api.js";
+import { useNavigate } from "react-router-dom";
 import "./Webcam.css";
 
 const WebcamStream = () => {
@@ -10,6 +11,10 @@ const WebcamStream = () => {
   const [processedImage, setProcessedImage] = useState(null);
   const [isWebcamReady, setIsWebcamReady] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const hasNavigatedRef = useRef(false);
+  const [canSend, setCanSend] = useState(true);
+  const canvasRef = useRef(null);
 
   // Load face-api.js models
   useEffect(() => {
@@ -25,40 +30,6 @@ const WebcamStream = () => {
   const handleUserMedia = () => {
     setIsWebcamReady(true);
   };
-
-  const canvasRef = useRef(null);
-
-  const handleDetectFaces = async () => {
-    if (webcamRef.current && webcamRef.current.video && canvasRef.current) {
-      const video = webcamRef.current.video;
-      const detections = await faceApi.detectAllFaces(
-        video,
-        new faceApi.TinyFaceDetectorOptions({
-          inputSize: 224,
-          scoreThreshold: 0.5,
-        })
-      );
-      // .withFaceLandmarks();
-      const displaySize = {
-        width: video.videoWidth,
-        height: video.videoHeight,
-      };
-      faceApi.matchDimensions(canvasRef.current, displaySize);
-      const resized = faceApi.resizeResults(detections, displaySize);
-      const ctx = canvasRef.current.getContext("2d");
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      faceApi.draw.drawDetections(ctx, resized);
-      // faceApi.draw.drawFaceLandmarks(ctx, resized);
-    }
-  };
-
-  useEffect(() => {
-    let interval;
-    if (isWebcamReady) {
-      interval = setInterval(handleDetectFaces, 66);
-    }
-    return () => clearInterval(interval);
-  }, [isWebcamReady]);
 
   const getCombinedScreenshot = () => {
     if (!webcamRef.current || !canvasRef.current) return null;
@@ -81,32 +52,74 @@ const WebcamStream = () => {
     return tempCanvas.toDataURL("image/jpeg");
   };
 
-  const handleCapture = async () => {
-    if (!webcamRef.current) return;
-    const imageSrc = getCombinedScreenshot();
-
-    if (!imageSrc || !imageSrc.startsWith("data:image")) {
-      alert("Could not capture image from webcam.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/process_frame`,
-        { image: imageSrc },
-        { headers: { "Content-Type": "application/json" } }
+  const handleDetectFaces = async () => {
+    if (webcamRef.current && webcamRef.current.video && canvasRef.current) {
+      const video = webcamRef.current.video;
+      const detections = await faceApi.detectAllFaces(
+        video,
+        new faceApi.TinyFaceDetectorOptions({
+          inputSize: 224,
+          scoreThreshold: 0.5,
+        })
       );
-      if (response.data.processed_image) {
-        setProcessedImage(response.data.processed_image);
-        setTimeout(() => setProcessedImage(null), 3000);
+      const displaySize = {
+        width: video.videoWidth,
+        height: video.videoHeight,
+      };
+      faceApi.matchDimensions(canvasRef.current, displaySize);
+      const resized = faceApi.resizeResults(detections, displaySize);
+      const ctx = canvasRef.current.getContext("2d");
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      faceApi.draw.drawDetections(ctx, resized);
+
+      // If a face is detected and canSend is true, send frame to API
+      if (resized.length > 0 && canSend && !hasNavigatedRef.current) {
+        setCanSend(false); // prevent immediate re-send
+        const imageSrc = getCombinedScreenshot();
+        if (imageSrc && imageSrc.startsWith("data:image")) {
+          setLoading(true);
+          try {
+            const response = await axios.post(
+              `${API_URL}/api/process_frame`,
+              { image: imageSrc },
+              { headers: { "Content-Type": "application/json" } }
+            );
+            if (response.data.processed_image) {
+              setProcessedImage(response.data.processed_image);
+            }
+            if (
+              response.data.pass_or_notpass !== undefined &&
+              response.data.pass_or_notpass &&
+              !hasNavigatedRef.current
+            ) {
+              hasNavigatedRef.current = true;
+              setTimeout(() => {
+                setProcessedImage(null);
+                console.log("Log in success!!");
+                navigate("/somethinginfuture");
+              }, 1000);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+          setLoading(false);
+        }
+        // Cooldown: allow sending again after 2.5s
+        setTimeout(() => setCanSend(true), 2500);
       }
-    } catch (err) {
-      alert("Error sending image to backend.");
-      console.error(err);
     }
-    setLoading(false);
   };
+
+  useEffect(() => {
+    let Detectinterval;
+    if (isWebcamReady) {
+      Detectinterval = setInterval(handleDetectFaces, 66);
+    }
+    return () => {
+      clearInterval(Detectinterval);
+      hasNavigatedRef.current = false;
+    };
+  }, [isWebcamReady]);
 
   return (
     <div className="webcam-main">
@@ -141,14 +154,6 @@ const WebcamStream = () => {
           />
         )}
       </div>
-
-      <button
-        onClick={handleCapture}
-        disabled={!isWebcamReady || loading}
-        className="webcam-capture-btn"
-      >
-        {loading ? "Processing..." : "Capture"}
-      </button>
     </div>
   );
 };

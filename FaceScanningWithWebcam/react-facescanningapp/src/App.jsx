@@ -1,8 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Homepage from "./User_page/Homepage";
-import Register from "./User_page/Register"; // อย่าลืมสร้างหรือ import ให้ถูก path
-import Webcamstream from "./User_page/webcam";
+import Register from "./User_page/Register";
+import Webcamstream from "./User_page/Webcam";
 import AdminHomepage from "./Admin_page/AdminHomepage";
 import Alluser from "./Admin_page/Alluser";
 import Alluserloggedin from "./Admin_page/Alluserloggedin";
@@ -10,6 +10,7 @@ import Eachuser from "./Admin_page/Eachuser";
 import Updateuser from "./Admin_page/Updateuser";
 import Forbidden from "./Admin_page/Forbidden";
 import Eachuserloggedin from "./Admin_page/Eachuserloggedin";
+import Somethinginfuture from "./User_page/Somethinginfututre";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/webcam" element={<Webcamstream />} />
         <Route path="/forbidden" element={<Forbidden />} />
+        <Route path="/somethinginfuture" element={<Somethinginfuture />} />
 
         {/* <Route element={<AdminRoute />}> */}
         <Route path="/admin" element={<AdminHomepage />} />

@@ -7,57 +7,42 @@ import urllib.request
 from PIL import Image
 
 
-# def encode_generator():
-#     folderPath = "images"
-#     imglist = []
-#     pathList = os.listdir(folderPath)
-#     image_name = []
+def encode_generator(image_bytes, image_name):
+    # Convert bytes to image
+    image_np = np.frombuffer(image_bytes, np.uint8)
+    user_image_bgr = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
 
-#     for path in pathList:
-#         imglist.append(cv2.imread(os.path.join(folderPath, path)))
-#         image_name.append(os.path.splitext(path)[0])
+    if user_image_bgr is None:
+        raise ValueError("Cannot decode image")
 
-    
-#     def encode_image(imgs):
-#         encodeList = []
+    # Convert to RGB for face_recognition
+    user_image_rgb = cv2.cvtColor(user_image_bgr, cv2.COLOR_BGR2RGB)
 
-#         for img in imgs:
-#             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-#             encoding = face_recognition.face_encodings(img)[0]
-#             encodeList.append(encoding)
-#         return encodeList
+    # Detect and encode
+    encodings = face_recognition.face_encodings(user_image_rgb)
+    if len(encodings) == 0:
+        raise ValueError("No face found in image")
 
-#     encodeAllImage = encode_image(imglist)
-#     encodeImgWithName = [encodeAllImage, image_name]
-#     print("Encoding Complete")
-
-#     file = open("EncodeFile.p", "wb")
-#     pickle.dump(encodeImgWithName, file)
-#     file.close()
-#     print("File saved")
-
-# encode_generator()
-
-def encode_generator(image, image_name):
-    
-    image = np.frombuffer(image, np.uint8)
-    user_image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    encoding = face_recognition.face_encodings(user_image)[0]
-    # encodeImgWithName = list(zip(user_image_name, encoding))
+    encoding = encodings[0]
     print("Encoding Complete")
 
+    # Load existing encodings (if available)
     encodeImgWithName = []
     if os.path.exists("EncodeFile.p"):
-        with open("EncodeFile.p", "rb") as f:
-            encodeImgWithName = pickle.load(f)
+        try:
+            with open("EncodeFile.p", "rb") as f:
+                encodeImgWithName = pickle.load(f)
+            print("File loaded")
+        except Exception as e:
+            print(f"ไม่สามารถโหลดไฟล์ EncodeFile.p ได้: {e}")
+            
 
+    # Append new encoding
     encodeImgWithName.append((image_name, encoding))
 
-    file = open("EncodeFile.p", "wb")
-    pickle.dump(encodeImgWithName, file)
-    file.close()
+    # Save back to file
+    with open("EncodeFile.p", "wb") as file:
+        pickle.dump(encodeImgWithName, file)
     print("File saved")
 
 

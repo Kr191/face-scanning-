@@ -32,16 +32,32 @@ imgMode = []
 for path in modePath:
     imgMode.append(cv2.imread(os.path.join(folderGraphicPath, path)))
 
-# Load encoding file
-file = open("EncodeFile.p", "rb")
-encodedImgWithName = pickle.load(file)
-file.close()
-imgName = [name for name, encode in encodedImgWithName]
-encodedImg = [encode for name, encode in encodedImgWithName]
+ # Load encoding file
+encodedImgWithName = []
+imgName = []
+encodedImg = []
 
-timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+if os.path.exists("EncodeFile.p"):
+    with open("EncodeFile.p", "rb") as file:
+        encodedImgWithName = pickle.load(file)
+    imgName = [name for name, encode in encodedImgWithName]
+    encodedImg = [encode for name, encode in encodedImgWithName]
+
+def reload_encodings():
+    global encodedImgWithName, imgName, encodedImg
+    encodedImgWithName = []
+    imgName = []
+    encodedImg = []
+    if os.path.exists("EncodeFile.p"):
+        with open("EncodeFile.p", "rb") as file:
+            encodedImgWithName = pickle.load(file)
+        imgName = [name for name, encode in encodedImgWithName]
+        encodedImg = [encode for name, encode in encodedImgWithName]
+    print("Encodings reloaded.")
 
 def web_cam(frame: np.ndarray):
+    pass_or_notpass = False
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     target_h = 633
     target_w = 414
 
@@ -51,26 +67,22 @@ def web_cam(frame: np.ndarray):
 
     faceCurFrame = face_recognition.face_locations(imgS) 
     if faceCurFrame == []:
-        return None  # No face found, return None
+        return None, pass_or_notpass  # No face found, return None
     
     encodeCurFrame = face_recognition.face_encodings(imgS, faceCurFrame)
 
     for encodeFace, faceLoc in zip(encodeCurFrame, faceCurFrame):
         matches = face_recognition.compare_faces(encodedImg, encodeFace)
         faceDist = face_recognition.face_distance(encodedImg, encodeFace)
+        if faceDist.size == 0:
+            reload_encodings()  # Reload encodings if empty
+
         matchIndex = np.argmin(faceDist)
         if round(min(faceDist), 2) >= 0.56:          
             img_to_return = cv2.resize(imgMode[2], (target_w, target_h))
 
         if matches[matchIndex]:
-            # Matched face
-            # offsetY = -170
-            # offsetX = -50
-            # y1, x2, y2, x1 = faceLoc
-            # y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
-            # bbox = 55 + x1 + offsetX, 162 + y1 + offsetY, x2 - x1, y2 - y1
-            # frame = cvzone.cornerRect(frame, bbox, rt=0)
-
+            
             user_data = collection.find_one({"image_name": imgName[matchIndex]})
 
             img_url = f"{url}/storage/v1/object/public/facescanningwithwebcam/images/{imgName[matchIndex]}"
@@ -101,10 +113,6 @@ def web_cam(frame: np.ndarray):
                 (0, 0, 0),
                 2,
             )
-            cv2.putText(
-                frame, timestamp, (835, 600), cv2.FONT_ITALIC, 1, (0, 0, 0), 2
-            )
-
             # image crop
             img_to_return = frame[44 : 44 + target_h, 808 : 808 + target_w]
 
@@ -138,11 +146,15 @@ def web_cam(frame: np.ndarray):
                     )
                 else:
                     print("Failed to encode frame as JPEG for upload.")
+
+            cv2.putText(
+                frame, login_today["loggedInAt"], (835, 600), cv2.FONT_ITALIC, 1, (0, 0, 0), 2
+            )
+            pass_or_notpass = True
             break  # Only process the first matched face
 
-   
-    # Always return a frame, even if no face found or not matched
-    return img_to_return
+   # Always return a frame, even if no face found or not matched
+    return img_to_return, pass_or_notpass
 
 
 if __name__ == "__main__":
