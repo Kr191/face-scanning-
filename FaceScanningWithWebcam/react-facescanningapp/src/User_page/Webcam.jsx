@@ -9,11 +9,12 @@ const WebcamStream = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const webcamRef = useRef(null);
   const [processedImage, setProcessedImage] = useState(null);
-  const [PassOrNotPass, setPassOrNotPass] = useState(false);
   const [isWebcamReady, setIsWebcamReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const hasNavigatedRef = useRef(false);
+  const [canSend, setCanSend] = useState(true);
+  const canvasRef = useRef(null);
 
   // Load face-api.js models
   useEffect(() => {
@@ -28,32 +29,6 @@ const WebcamStream = () => {
 
   const handleUserMedia = () => {
     setIsWebcamReady(true);
-  };
-
-  const canvasRef = useRef(null);
-
-  const handleDetectFaces = async () => {
-    if (webcamRef.current && webcamRef.current.video && canvasRef.current) {
-      const video = webcamRef.current.video;
-      const detections = await faceApi.detectAllFaces(
-        video,
-        new faceApi.TinyFaceDetectorOptions({
-          inputSize: 224,
-          scoreThreshold: 0.5,
-        })
-      );
-      // .withFaceLandmarks();
-      const displaySize = {
-        width: video.videoWidth,
-        height: video.videoHeight,
-      };
-      faceApi.matchDimensions(canvasRef.current, displaySize);
-      const resized = faceApi.resizeResults(detections, displaySize);
-      const ctx = canvasRef.current.getContext("2d");
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      faceApi.draw.drawDetections(ctx, resized);
-      // faceApi.draw.drawFaceLandmarks(ctx, resized);
-    }
   };
 
   const getCombinedScreenshot = () => {
@@ -77,47 +52,71 @@ const WebcamStream = () => {
     return tempCanvas.toDataURL("image/jpeg");
   };
 
+  const handleDetectFaces = async () => {
+    if (webcamRef.current && webcamRef.current.video && canvasRef.current) {
+      const video = webcamRef.current.video;
+      const detections = await faceApi.detectAllFaces(
+        video,
+        new faceApi.TinyFaceDetectorOptions({
+          inputSize: 224,
+          scoreThreshold: 0.5,
+        })
+      );
+      const displaySize = {
+        width: video.videoWidth,
+        height: video.videoHeight,
+      };
+      faceApi.matchDimensions(canvasRef.current, displaySize);
+      const resized = faceApi.resizeResults(detections, displaySize);
+      const ctx = canvasRef.current.getContext("2d");
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      faceApi.draw.drawDetections(ctx, resized);
+
+      // If a face is detected and canSend is true, send frame to API
+      if (resized.length > 0 && canSend && !hasNavigatedRef.current) {
+        setCanSend(false); // prevent immediate re-send
+        const imageSrc = getCombinedScreenshot();
+        if (imageSrc && imageSrc.startsWith("data:image")) {
+          setLoading(true);
+          try {
+            const response = await axios.post(
+              `${API_URL}/api/process_frame`,
+              { image: imageSrc },
+              { headers: { "Content-Type": "application/json" } }
+            );
+            if (response.data.processed_image) {
+              setProcessedImage(response.data.processed_image);
+            }
+            if (
+              response.data.pass_or_notpass !== undefined &&
+              response.data.pass_or_notpass &&
+              !hasNavigatedRef.current
+            ) {
+              hasNavigatedRef.current = true;
+              setTimeout(() => {
+                setProcessedImage(null);
+                console.log("Log in success!!");
+                navigate("/somethinginfuture");
+              }, 1000);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+          setLoading(false);
+        }
+        // Cooldown: allow sending again after 2.5s
+        setTimeout(() => setCanSend(true), 2500);
+      }
+    }
+  };
+
   useEffect(() => {
-    let interval;
     let Detectinterval;
     if (isWebcamReady) {
       Detectinterval = setInterval(handleDetectFaces, 66);
-      interval = setInterval(async () => {
-        const imageSrc = getCombinedScreenshot();
-        if (!imageSrc || !imageSrc.startsWith("data:image")) return;
-
-        setLoading(true);
-        try {
-          const response = await axios.post(
-            `${API_URL}/api/process_frame`,
-            { image: imageSrc },
-            { headers: { "Content-Type": "application/json" } }
-          );
-          if (response.data.processed_image) {
-            setProcessedImage(response.data.processed_image);
-            // setTimeout(() => setProcessedImage(null), 2000); // 2 seconds
-          }
-          if (
-            response.data.pass_or_notpass !== undefined &&
-            response.data.pass_or_notpass &&
-            !hasNavigatedRef.current
-          ) {
-            hasNavigatedRef.current = true;
-            setTimeout(() => {
-              setProcessedImage(null);
-              console.log("Face matched successfully!");
-              navigate("/somethinginfuture");
-            }, 1000); // 1 seconds
-          }
-        } catch (err) {
-          console.error(err);
-        }
-        setLoading(false);
-      }, 2500); // 2.5 seconds
     }
     return () => {
       clearInterval(Detectinterval);
-      clearInterval(interval);
       hasNavigatedRef.current = false;
     };
   }, [isWebcamReady]);
