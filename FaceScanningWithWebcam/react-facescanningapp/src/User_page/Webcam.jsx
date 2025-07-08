@@ -2,14 +2,18 @@ import React, { use, useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
 import * as faceApi from "face-api.js";
+import { useNavigate } from "react-router-dom";
 import "./Webcam.css";
 
 const WebcamStream = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const webcamRef = useRef(null);
   const [processedImage, setProcessedImage] = useState(null);
+  const [PassOrNotPass, setPassOrNotPass] = useState(false);
   const [isWebcamReady, setIsWebcamReady] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const hasNavigatedRef = useRef(false);
 
   // Load face-api.js models
   useEffect(() => {
@@ -75,8 +79,9 @@ const WebcamStream = () => {
 
   useEffect(() => {
     let interval;
+    let Detectinterval;
     if (isWebcamReady) {
-      interval = setInterval(handleDetectFaces, 66);
+      Detectinterval = setInterval(handleDetectFaces, 66);
       interval = setInterval(async () => {
         const imageSrc = getCombinedScreenshot();
         if (!imageSrc || !imageSrc.startsWith("data:image")) return;
@@ -90,15 +95,31 @@ const WebcamStream = () => {
           );
           if (response.data.processed_image) {
             setProcessedImage(response.data.processed_image);
-            setTimeout(() => setProcessedImage(null), 2000); // 2 seconds
+            // setTimeout(() => setProcessedImage(null), 2000); // 2 seconds
+          }
+          if (
+            response.data.pass_or_notpass !== undefined &&
+            response.data.pass_or_notpass &&
+            !hasNavigatedRef.current
+          ) {
+            hasNavigatedRef.current = true;
+            setTimeout(() => {
+              setProcessedImage(null);
+              console.log("Face matched successfully!");
+              navigate("/somethinginfuture");
+            }, 2000);
           }
         } catch (err) {
           console.error(err);
         }
         setLoading(false);
-      }, 3500); // 3.5 seconds
+      }, 2000); // 2 seconds
     }
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(Detectinterval);
+      clearInterval(interval);
+      hasNavigatedRef.current = false;
+    };
   }, [isWebcamReady]);
 
   return (

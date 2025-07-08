@@ -96,15 +96,17 @@ async def process_frame(data: FrameRequest):
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
         # Using webcam.py
-        result_frame = webcam.web_cam(frame)
+        result_frame, result_pass = webcam.web_cam(frame)
         if result_frame is None:
-            return {"processed_image": None}
+            return {"processed_image": None,
+                    "pass_or_notpass": False,}
         # Convert result frame to base64
         _, buffer = cv2.imencode('.jpg', result_frame)
         b64 = base64.b64encode(buffer).decode('utf-8')
         processed_image = f"data:image/jpeg;base64,{b64}"
 
-        return {"processed_image": processed_image}
+        return {"processed_image": processed_image,
+                "pass_or_notpass": result_pass}
 
     except HTTPException as e:
         raise e 

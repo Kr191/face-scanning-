@@ -45,6 +45,7 @@ if os.path.exists("EncodeFile.p"):
 
 def reload_encodings():
     global encodedImgWithName, imgName, encodedImg
+    pass_or_notpass = False
     encodedImgWithName = []
     imgName = []
     encodedImg = []
@@ -66,7 +67,7 @@ def web_cam(frame: np.ndarray):
 
     faceCurFrame = face_recognition.face_locations(imgS) 
     if faceCurFrame == []:
-        return None  # No face found, return None
+        return None, pass_or_notpass  # No face found, return None
     
     encodeCurFrame = face_recognition.face_encodings(imgS, faceCurFrame)
 
@@ -149,10 +150,11 @@ def web_cam(frame: np.ndarray):
             cv2.putText(
                 frame, login_today["loggedInAt"], (835, 600), cv2.FONT_ITALIC, 1, (0, 0, 0), 2
             )
+            pass_or_notpass = True
             break  # Only process the first matched face
 
    # Always return a frame, even if no face found or not matched
-    return img_to_return
+    return img_to_return, pass_or_notpass
 
 
 if __name__ == "__main__":
