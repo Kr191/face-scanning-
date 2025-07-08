@@ -110,9 +110,9 @@ async def process_frame(data: FrameRequest):
 
     except HTTPException as e:
         raise e 
-    # except Exception as e:
-    #     print("⚠️ Unexpected error in process_frame:", e)
-    #     raise HTTPException(status_code=500, detail="Internal server error")
+    except Exception as e:
+        print("⚠️ Unexpected error in process_frame:", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @api.post("/api/adduser")
 async def add_user(user_json: str = Form(...), file: UploadFile = File(...)):
