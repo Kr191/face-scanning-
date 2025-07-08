@@ -45,7 +45,6 @@ if os.path.exists("EncodeFile.p"):
 
 def reload_encodings():
     global encodedImgWithName, imgName, encodedImg
-    pass_or_notpass = False
     encodedImgWithName = []
     imgName = []
     encodedImg = []
@@ -57,6 +56,7 @@ def reload_encodings():
     print("Encodings reloaded.")
 
 def web_cam(frame: np.ndarray):
+    pass_or_notpass = False
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     target_h = 633
     target_w = 414

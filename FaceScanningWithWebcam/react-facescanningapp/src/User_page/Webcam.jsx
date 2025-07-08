@@ -107,13 +107,13 @@ const WebcamStream = () => {
               setProcessedImage(null);
               console.log("Face matched successfully!");
               navigate("/somethinginfuture");
-            }, 2000);
+            }, 1000); // 1 seconds
           }
         } catch (err) {
           console.error(err);
         }
         setLoading(false);
-      }, 2000); // 2 seconds
+      }, 2500); // 2.5 seconds
     }
     return () => {
       clearInterval(Detectinterval);
