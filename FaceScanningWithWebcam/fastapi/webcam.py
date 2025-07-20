@@ -37,6 +37,7 @@ encodedImgWithName = []
 imgName = []
 encodedImg = []
 
+
 if os.path.exists("EncodeFile.p"):
     with open("EncodeFile.p", "rb") as file:
         encodedImgWithName = pickle.load(file)
@@ -113,8 +114,6 @@ def web_cam(frame: np.ndarray):
                 (0, 0, 0),
                 2,
             )
-            # image crop
-            img_to_return = frame[44 : 44 + target_h, 808 : 808 + target_w]
 
              # Check if user has already logged in today
             login_today = collection_login.find_one(
@@ -135,21 +134,35 @@ def web_cam(frame: np.ndarray):
                     }
                 )
                 print("Logged in at", timestamp)
-                 # add frame to supabase
-                success, buffer = cv2.imencode('.jpg', frame)
-                if success:
-                    img_bytes = buffer.tobytes()
-                    response = supabase.storage.from_("facescanningwithwebcam").upload(
-                        file=img_bytes,
-                        path=f'images/loggedin_history/{file_name}',
-                        file_options={"cache-control": "3600", "upsert": "false"},
-                    )
-                else:
-                    print("Failed to encode frame as JPEG for upload.")
 
-            cv2.putText(
-                frame, login_today["loggedInAt"], (835, 600), cv2.FONT_ITALIC, 1, (0, 0, 0), 2
+            login_result = collection_login.find_one(
+                {
+                    "user_id": user_data["_id"],
+                    "loggedInAt": {"$regex": f"^{timestamp[:10]}"},
+                }
             )
+            cv2.putText(
+                frame,
+                login_result["loggedInAt"],
+                (835, 600), cv2.FONT_ITALIC,
+                1,
+                (0, 0, 0), 
+                2
+            )
+            # add frame to supabase
+            success, buffer = cv2.imencode('.jpg', frame)
+            if success:
+                img_bytes = buffer.tobytes()
+                response = supabase.storage.from_("facescanningwithwebcam").upload(
+                    file=img_bytes,
+                    path=f'images/loggedin_history/{file_name}',
+                    file_options={"cache-control": "3600", "upsert": "false"},
+                )
+            else:
+                print("Failed to encode frame as JPEG for upload.")
+
+            # image crop
+            img_to_return = frame[44 : 44 + target_h, 808 : 808 + target_w]
             pass_or_notpass = True
             break  # Only process the first matched face
 
