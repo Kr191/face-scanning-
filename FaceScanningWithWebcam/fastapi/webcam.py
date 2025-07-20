@@ -56,15 +56,28 @@ def reload_encodings():
         encodedImg = [encode for name, encode in encodedImgWithName]
     print("Encodings reloaded.")
 
+def add_image_to_supabase(frame, file_name):
+        # add frame to supabase
+        success, buffer = cv2.imencode('.jpg', frame)
+        if success:
+            img_bytes = buffer.tobytes()
+            response = supabase.storage.from_("facescanningwithwebcam").upload(
+                file=img_bytes,
+                path=f'images/loggedin_history/{file_name}',
+                file_options={"cache-control": "3600", "upsert": "false"},
+            )
+        else:
+            print("Failed to encode frame as JPEG for upload.")
+
 def web_cam(frame: np.ndarray):
     pass_or_notpass = False
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     target_h = 633
     target_w = 414
+    file_name = f"{uuid.uuid4()}.jpg"
 
     imgS = cv2.resize(frame, (0, 0), None, 0.25, 0.25)
     imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
-    file_name = f"{uuid.uuid4()}.jpg"
 
     faceCurFrame = face_recognition.face_locations(imgS) 
     if faceCurFrame == []:
@@ -135,31 +148,24 @@ def web_cam(frame: np.ndarray):
                 )
                 print("Logged in at", timestamp)
 
-            login_result = collection_login.find_one(
-                {
-                    "user_id": user_data["_id"],
-                    "loggedInAt": {"$regex": f"^{timestamp[:10]}"},
-                }
-            )
-            cv2.putText(
-                frame,
-                login_result["loggedInAt"],
-                (835, 600), cv2.FONT_ITALIC,
-                1,
-                (0, 0, 0), 
-                2
-            )
-            # add frame to supabase
-            success, buffer = cv2.imencode('.jpg', frame)
-            if success:
-                img_bytes = buffer.tobytes()
-                response = supabase.storage.from_("facescanningwithwebcam").upload(
-                    file=img_bytes,
-                    path=f'images/loggedin_history/{file_name}',
-                    file_options={"cache-control": "3600", "upsert": "false"},
+                cv2.putText(
+                    frame,
+                    timestamp,
+                    (835, 600), cv2.FONT_ITALIC,
+                    1,
+                    (0, 0, 0), 
+                    2
                 )
+                add_image_to_supabase(frame, file_name)
             else:
-                print("Failed to encode frame as JPEG for upload.")
+                cv2.putText(
+                    frame,
+                    login_today["loggedInAt"],
+                    (835, 600), cv2.FONT_ITALIC,
+                    1,
+                    (0, 0, 0), 
+                    2
+                )
 
             # image crop
             img_to_return = frame[44 : 44 + target_h, 808 : 808 + target_w]
