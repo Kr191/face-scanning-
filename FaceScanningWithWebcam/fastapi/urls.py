@@ -34,7 +34,7 @@ api.add_middleware(
 
 # ALLOW_IP = {"127.0.0.1", "192.168.1.100"}
 
-MONGODB_URI = os.getenv("MONGODB_URI")
+MONGODB_URI = os.getenv("MONGO_URI")
 url: str = os.getenv("SUPABASE_URL")
 key: str = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
