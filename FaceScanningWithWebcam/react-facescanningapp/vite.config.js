@@ -8,12 +8,12 @@ export default defineConfig({
   host: '0.0.0.0',
   port: 5173,
   origin: 'https://trainee.bigstream.cloud',
-  hmr: {
-    protocol: 'ws',
-    host: 'trainee.bigstream.cloud',
-    port: 443,     // required, browser uses HTTPS to Cloudflare
-    path: '/'
-  },
+//    hmr: {
+//     protocol: 'wss',
+//         clientPort: 443,
+//     host: "trainee.bigstream.cloud",
+//         path: "/soket.io",
+//   },
   allowedHosts: ['trainee.bigstream.cloud']
 }
 })

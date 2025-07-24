@@ -11,7 +11,7 @@ const Eachuserloggedin = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/api/eachuser/loggedin/${loggedin_id}`)
+      .get(`/api/eachuser/loggedin/${loggedin_id}`)
       .then((res) => {
         setLoggedin(res.data);
       })

@@ -60,7 +60,7 @@ class UpdateUser(BaseModel):
 class FrameRequest(BaseModel):
     image: str
 
-@api.get("/")
+@api.get("/api")
 async def web_cam_message():
     return {"message": "successfully"}
 

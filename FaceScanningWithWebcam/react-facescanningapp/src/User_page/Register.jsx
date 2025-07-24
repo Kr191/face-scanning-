@@ -32,7 +32,7 @@ function RegisterForm() {
     formData.append("file", image);
 
     try {
-      const res = await axios.post(`${API_URL}/api/adduser`, formData, {
+      const res = await axios.post(`/api/adduser`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

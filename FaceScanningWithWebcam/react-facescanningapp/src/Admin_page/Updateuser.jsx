@@ -14,7 +14,7 @@ function UpdateForm() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${API_URL}/api/updateuser/${user_id}`, {
+      await axios.put(`/api/updateuser/${user_id}`, {
         first_name: firstName,
         last_name: lastName,
       });

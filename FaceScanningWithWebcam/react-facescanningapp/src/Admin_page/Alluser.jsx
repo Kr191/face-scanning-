@@ -11,7 +11,7 @@ const Alluser = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/api/getusers`)
+      .get(`/api/getusers`)
       .then((res) => {
         setUsers(res.data);
       })

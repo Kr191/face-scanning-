@@ -80,7 +80,7 @@ const WebcamStream = () => {
           setLoading(true);
           try {
             const response = await axios.post(
-              `${API_URL}/api/process_frame`,
+              `/api/process_frame`,
               { image: imageSrc },
               { headers: { "Content-Type": "application/json" } }
             );

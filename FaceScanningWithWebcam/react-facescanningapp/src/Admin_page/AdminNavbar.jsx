@@ -16,7 +16,7 @@ const AdminNavbar = () => {
   useEffect(() => {
     // Fetch all users once
     axios
-      .get(`${API_URL}/api/getusers`)
+      .get(`/api/getusers`)
       .then((res) => setAllUsers(res.data))
       .catch((err) => console.error("Error fetching users:", err));
   }, [API_URL]);

@@ -13,7 +13,7 @@ const Eachuser = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/api/getuser/${user_id}`)
+      .get(`/api/getuser/${user_id}`)
       .then((res) => {
         setUser(res.data);
       })
@@ -22,7 +22,7 @@ const Eachuser = () => {
       });
 
     axios
-      .get(`${API_URL}/api/getloggedin/${user_id}`)
+      .get(`/api/getloggedin/${user_id}`)
       .then((res) => {
         setLoggedin(res.data);
       })
@@ -34,7 +34,7 @@ const Eachuser = () => {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        await axios.delete(`${API_URL}/api/deleteuser/${user_id}`);
+        await axios.delete(`/api/deleteuser/${user_id}`);
         navigate("/admin/users");
       } catch (err) {
         console.error("Failed to delete user:", err);

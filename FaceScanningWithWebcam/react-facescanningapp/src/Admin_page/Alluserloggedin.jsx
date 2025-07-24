@@ -11,7 +11,7 @@ const Alluser = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/api/getalluserloggedin`)
+      .get(`/api/getalluserloggedin`)
       .then((res) => {
         setUsers(res.data);
       })

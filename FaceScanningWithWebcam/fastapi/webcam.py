@@ -93,7 +93,7 @@ def web_cam(frame: np.ndarray):
 
         matchIndex = np.argmin(faceDist)
         if round(min(faceDist), 2) >= 0.56:          
-            img_to_return = cv2.resize(imgMode[2], (target_w, target_h))
+            img_to_return = cv2.resize(imgMode[1], (target_w, target_h))
 
         if matches[matchIndex]:
             
@@ -106,7 +106,7 @@ def web_cam(frame: np.ndarray):
             userImg = cv2.resize(userImg, (180, 180))
 
             # Draw UI for matched user
-            imgModeResized = cv2.resize(imgMode[1], (target_w, target_h))
+            imgModeResized = cv2.resize(imgMode[0], (target_w, target_h))
             frame[44 : 44 + target_h, 808 : 808 + target_w] = imgModeResized
             frame[80 : 80 + 180, 925 : 925 + 180] = userImg
             cv2.putText(
