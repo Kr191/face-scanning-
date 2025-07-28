@@ -10,7 +10,7 @@ A full-stack real-time face recognition and attendance system using React, FastA
 - **Face recognition** and attendance logging via FastAPI backend
 - **User registration** with image upload
 - **Attendance history** stored in MongoDB and images in Supabase Storage
-- **Only logs the first successful frame per user per session**
+- **Only logs the first successful frame per user per session. After log in successful it going to navigate to inside web page**
 - **Dockerized** for easy deployment
 
 ---
