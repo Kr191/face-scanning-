@@ -143,10 +143,10 @@ cd face-scanning-with-webcam
    The app detects faces in real time and sends frames to the backend only when a face is detected.
 
 3. **Attendance logging:**  
-   When a recognized user logs in, their attendance and image are recorded (only once per session).
+   When a recognized user logs in, their attendance and image are recorded (only once per session). Once you log in already it will navigate you to inside web page
 
 4. **View processed images:**  
-   The processed image (with overlays) is displayed for a short time after successful recognition.
+   The processed image is displayed for a short time after successful recognition.
 
 ---
 
