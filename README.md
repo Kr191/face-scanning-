@@ -52,7 +52,21 @@ cd face-scanning-with-webcam
   uvicorn urls:api --reload
   ```
 
-### 3. Frontend (React)
+#### FastAPI Usage & Tips
+
+- **Development:**  
+  Use `uvicorn urls:api --reload` for hot-reloading during development.
+- **API Docs:**  
+  Visit [http://localhost:8000/docs](http://localhost:8000/docs) for interactive Swagger API documentation.
+- **Environment Variables:**  
+  Set MongoDB URI and Supabase credentials in a `.env` file or as environment variables.
+- **Reload Encodings:**  
+  Encodings are loaded once at startup. To reload after adding a user, call the `/api/reload_encodings` endpoint or use the reload logic in `/api/adduser`.
+- **Troubleshooting:**
+  - If you get encoding errors, check your image format and ensure only one face per image.
+  - For database issues, verify your MongoDB and Supabase connections.
+
+### 3. Frontend (React + Vite)
 
 - Install Node dependencies:
 
@@ -64,11 +78,50 @@ cd face-scanning-with-webcam
 - Place face-api.js models in `react-facescanningapp/public/models`  
   (Download from [face-api.js model repo](https://github.com/justadudewhohacks/face-api.js-models))
 
-- Start React app:
+#### Running the Development Server
+
+- Start the React app in development mode:
 
   ```bash
   npm run dev
   ```
+
+- By default, Vite will serve your app at [http://localhost:5173](http://localhost:5173) (or the port shown in your terminal).
+
+#### Building for Production
+
+- To build the app for production deployment:
+
+  ```bash
+  npm run build
+  ```
+
+- The output will be in the `dist` folder. You can serve this with any static file server or integrate with your backend.
+
+#### Previewing the Production Build
+
+- To preview the production build locally:
+
+  ```bash
+  npm run preview
+  ```
+
+#### Environment Variables
+
+- Set your backend API URL in `.env`:
+
+  ```
+  VITE_API_URL= YOUR BASE URL
+  ```
+
+- Access it in your code via `import.meta.env.VITE_API_URL`.
+
+#### Troubleshooting
+
+- If you see errors about missing models, make sure you have downloaded and placed the required face-api.js model files in `public/models`.
+- If you change environment variables, restart the dev server.
+- For webcam issues, ensure your browser has permission to access the camera.
+- For CORS errors, ensure your FastAPI backend allows requests from your frontend origin.
 
 ### 4. Docker (optional)
 
@@ -129,16 +182,18 @@ Set these in `.env` files in each service.
 
 ## How It Works
 
-- **Frontend:**
+- **Frontend (React + Vite):**
 
   - Uses `face-api.js` to detect faces in real time.
-  - Sends a frame to backend only when a face is detected and not recently sent.
+  - Sends a frame to backend only when a face is detected and not recently sent (throttled).
   - Shows processed image and navigates on successful login.
+  - Built and served with Vite for fast development and optimized production builds.
 
-- **Backend:**
+- **Backend (FastAPI):**
   - Uses `face_recognition` to match faces.
   - Logs attendance only once per user per session.
   - Stores images in Supabase and logs in MongoDB.
+  - Provides REST API endpoints for user registration, frame processing, and encoding reload.
 
 ---
 
@@ -148,4 +203,4 @@ Pull requests and issues are welcome!
 
 ---
 
-**For more details, see the code in [`fastapi/`](fastapi/webcam.py), [`react-facescanningapp/`](react-facescanningapp/src/User_page/Webcam.jsx), and the Docker setup.**
+\*\*For more details, see the code in [`fastapi/`](fastapi/webcam.py), [`react-facescanningapp/`](react-facescanningapp/src/User_page/Webcam.jsx),
