@@ -1,3 +1,4 @@
+
 # Face Scanning with Webcam
 
 A full-stack real-time face recognition and attendance system using React, FastAPI, MongoDB, and Supabase.
@@ -36,6 +37,7 @@ A full-stack real-time face recognition and attendance system using React, FastA
 git clone https://github.com/yourusername/face-scanning-with-webcam.git
 cd face-scanning-with-webcam
 ```
+
 
 ### 2. Backend (FastAPI)
 
