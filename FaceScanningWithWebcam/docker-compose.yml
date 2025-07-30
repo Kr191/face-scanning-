@@ -43,10 +43,9 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - MONGO_URI=mongodb://admin:facescanadmin@db:27017/
-      - SUPABASE_URL=https://qyrqyyqbsqmexauttmpd.supabase.co/
-      - SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5cnF5eXFic3FtZXhhdXR0bXBkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTUyNDI4OCwiZXhwIjoyMDY1MTAwMjg4fQ.NxXaFLI1zEVoMl6J0eI3zLCUXr8WyLGQdglrW5KrmpE
-
+      - MONGO_URI=YOUR-MONGODB-URI
+      - SUPABASE_URL=SUPABASE-URL-CREDENTIAL
+      - SUPABASE_KEY=SUPABASE-KEY-CREDENTIAL
     networks:
       - frontend
       - backend
