@@ -1,0 +1,38 @@
+.admin-navbar {
+  background-color: #B388EB;
+  padding: 0.5rem 1rem;
+}
+
+.admin-navbar-search-container {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.admin-navbar-search-input {
+  border-radius: 999px;
+  padding-left: 1rem;
+  height: 36px;
+  border: none;
+  box-shadow: none;
+}
+
+.admin-navbar-dropdown {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #b388eb;
+  border-radius: 0 0 12px 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(179,136,235,0.15);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.admin-navbar-dropdown-item {
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}

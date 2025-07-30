@@ -1,6 +1,7 @@
 import json
 import webcam
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from websockets.exceptions import ConnectionClosed
 from pymongo import MongoClient
 from pydantic import BaseModel
@@ -13,7 +14,7 @@ import pickle
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
-import base64, re
+import base64
 from PIL import Image
 import numpy as np
 from io import BytesIO
@@ -25,17 +26,15 @@ api = FastAPI()
 
 api.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3001",
-        "http://localhost:3002",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-MONGODB_URI = os.getenv("MONGODB_URI")
+# ALLOW_IP = {"127.0.0.1", "192.168.1.100"}
+
+MONGODB_URI = os.getenv("MONGO_URI")
 url: str = os.getenv("SUPABASE_URL")
 key: str = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
@@ -61,7 +60,7 @@ class UpdateUser(BaseModel):
 class FrameRequest(BaseModel):
     image: str
 
-@api.get("/")
+@api.get("/api")
 async def web_cam_message():
     return {"message": "successfully"}
 
@@ -97,14 +96,17 @@ async def process_frame(data: FrameRequest):
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
         # Using webcam.py
-        result_frame = webcam.web_cam(frame)
-
+        result_frame, result_pass = webcam.web_cam(frame)
+        if result_frame is None:
+            return {"processed_image": None,
+                    "pass_or_notpass": False,}
         # Convert result frame to base64
         _, buffer = cv2.imencode('.jpg', result_frame)
         b64 = base64.b64encode(buffer).decode('utf-8')
         processed_image = f"data:image/jpeg;base64,{b64}"
 
-        return {"processed_image": processed_image}
+        return {"processed_image": processed_image,
+                "pass_or_notpass": result_pass}
 
     except HTTPException as e:
         raise e 
@@ -117,7 +119,6 @@ async def add_user(user_json: str = Form(...), file: UploadFile = File(...)):
     print("Raw user_json:", user_json)
     try:
         user_data = json.loads(user_json)
-        print("Parsed user_data:", user_data)
         user = User(**user_data)
     except Exception as e:
         print("Error while parsing JSON or creating User:", str(e))
@@ -146,6 +147,12 @@ async def add_user(user_json: str = Form(...), file: UploadFile = File(...)):
 
     # add data to mongoDB
     adding = collection.insert_one(user_dict)
+    print("user_data:", user_dict)
+
+    # reload encodings after adding a new user
+    if os.path.exists("EncodeFile.p"):
+        reload = webcam.reload_encodings()
+        
 
     return [
         {"message": "user added"},
@@ -230,6 +237,24 @@ async def find_user_loggedin_from_id(user_id: str):
             all_time_login.append(logged_in)
         return all_time_login
 
+@api.get("/api/eachuser/loggedin/{loggedin_id}")
+async def find_user_loggedin_from_loggedin_id(loggedin_id: str):
+    try:
+        object_id = ObjectId(loggedin_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+    
+    loggedin_history = collection_login.find_one({"_id": object_id})
+
+    if not loggedin_history:
+        raise HTTPException(status_code=404, detail="No users found")
+    else:
+       loggedin_history["_id"] = str(loggedin_history["_id"])
+       loggedin_history["user_id"] = str(loggedin_history["user_id"])
+       loggedin_history["image_name"] = f'{url}/storage/v1/object/public/facescanningwithwebcam/images/loggedin_history/{loggedin_history["image_name"]}'
+    
+    return loggedin_history
+    
 
 @api.put("/api/updateuser/{user_id}")
 async def update_user(user_id: str, update_user: UpdateUser):
@@ -257,6 +282,10 @@ async def update_user(user_id: str, update_user: UpdateUser):
 
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
+    
+     # reload encodings after adding a new user
+    if os.path.exists("EncodeFile.p"):
+        reload = webcam.reload_encodings()
 
     return {"message": "User Updated Successfully"}
 
@@ -279,12 +308,39 @@ async def delete_user(user_id: str):
 
     with open("EncodeFile.p", "wb") as save_file:
         pickle.dump(filtered_data, save_file)
+    print("EncodeFile.p updated")
 
     path = f"images/{delete_user_image['image_name']}"
     response = supabase.storage.from_("facescanningwithwebcam").remove([path])
 
     result = collection.delete_one({"_id": object_id})
+
+     # reload encodings after adding a new user
+    if os.path.exists("EncodeFile.p"):
+        reload = webcam.reload_encodings()
+        
     if result.deleted_count == 1:
         return {"message": "Delete user Successfully"}
     else:
         raise HTTPException(status_code=404, detail="User not found")
+
+# @api.middleware("http")
+# async def ip_whitelist_middleware(request: Request, call_next):
+#     path = request.url.path
+#     client_ip = request.headers.get("X-Forwarded-For", request.client.host)  # รองรับ proxy
+
+#     # เช็คเฉพาะ path ที่ต้องการป้องกัน
+#     if path.startswith("/admin") or path.startswith("/api/check-admin-access"):
+#         if client_ip not in ALLOW_IP:
+#             return JSONResponse(status_code=403, content={"detail": "Access denied for IP: " + client_ip})
+
+#     # ให้ผ่านต่อไปยัง endpoint ปกติ
+#     response = await call_next(request)
+#     return response
+
+# @api.get("/api/check-admin-access")
+# async def check_admin_access(request: Request):
+#     client_ip = request.headers.get("X-Forwarded-For", request.client.host)
+#     if client_ip in ALLOW_IP:
+#         return {"status": "ok"}
+#     return JSONResponse(status_code=403, content={"detail": "Access denied"})
